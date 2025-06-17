@@ -1,0 +1,5 @@
+report/main.*
+!report/main.tex
+
+main.*
+!main.tex

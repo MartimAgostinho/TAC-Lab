@@ -1,0 +1,136 @@
+\section{Template}
+
+\begin{table}[h]
+    \centering
+    \caption{Comparison of Key Parameters for MCP6001, TL084, and LM324}
+    \begin{tabularx}{\textwidth}{>{\centering\arraybackslash}X >{\centering\arraybackslash}X >{\centering\arraybackslash}X >{\centering\arraybackslash}X}
+        \toprule
+        \textbf{Characteristic} & \textbf{MCP6001} & \textbf{TL084} & \textbf{LM324} \\
+        \midrule
+        Max Output (V) & $(V+)-25mV$ & $(V+)$ & $(V+) - 1.5V$ \\
+        \midrule
+        Min Output (V) & $(V-)+25mV$ & $(V-) + 1.5V$ & $(V-) + 150mV$ \\
+        \midrule
+        Supply Range (V) & $1.8V$ to $6.0V$ & $4.5V$ to $40V$ & $3V$ to $36V$ \\
+        \midrule
+        Offset (mV) & $\pm 4.5mV$ & $1mV$ & $\pm 3 mV$ \\
+        \midrule
+        Max Output (mA) & $\pm 23 mA$ $(5.5V)$ & $10 mA$ & $\pm 30 mA$ \\
+        \midrule
+        Idle Consumption & $100 \mu A $ & $1.4$ $mA$ & $240 \mu A$ \\
+        \bottomrule
+    \end{tabularx}
+    \label{tab:opamp}
+\end{table}
+%TODO FOTOS LADO A LADO
+\begin{figure}[H]
+    \centering
+    \includegraphics*[scale = 0.05]{Images/NovaFctHor.png}
+    \caption{Logo da Nova FCT}
+    \label{wrap-fig:1}
+\end{figure}
+
+%Equation System
+\begin{equation}
+    \begin{cases}
+    
+        R( 283,15 ) = 1,998\cdot 10^4 ~\Omega \\
+        R( 298,15 ) = 10^4 ~\Omega\\
+        R( 313,15 ) = 0,5282 \cdot 10^4 ~\Omega\\
+    
+    \end{cases}
+    \Leftrightarrow
+    \begin{cases}
+        A = 1,3092 \cdot 10^{-3}\\
+        B = 2,1439 \cdot 10^{-4}\\
+        C = 9,6600 \cdot 10^{-8}\\
+    
+    \end{cases}
+\end{equation}
+
+\begin{lstlisting}[language=Matlab, caption=Matlab code example]
+    Fdz
+    printf('Polos: ');
+    PlFdz
+    %figure(3);
+    pzmap(Fdz);
+    %figure(4);
+    step(Fdz);
+\end{lstlisting}
+
+\begin{equation}
+    \begin{split}
+        V_x^{\phi_{n+1}} &= V_x^{\phi_{n}} +  \frac{ V_r\overbrace{\sum_{i}\left[ (C_i\cdot b_i)^{\phi_{n+1}} - (C_i\cdot b_i)^{\phi_{n}}\right]}^{\Delta C_i}+C_B\cdot \left(V_y^{\phi_{n+1}}-V_y^{\phi_{n}}\right)}{C_{MT}} \\
+        V_x^{\phi_{n+1}} &= V_x^{\phi_{n}} + V_r \frac{ V_r \Delta C_i +C_B\cdot \left(V_y^{\phi_{n+1}}-V_y^{\phi_{n}}\right)}{C_{MT}}
+    \end{split}
+    \label{eq:VxPn}
+\end{equation}
+
+\begin{equation}
+    \boxed{\underbrace{\int_{0}^{T}r(u)\,r\bigl(u+\tau - nT\bigr)\,du}_{v\bigl(\tau - nT\bigr)}}
+\end{equation}
+
+\begin{itemize}
+    \item item 1
+    
+    ...
+    \item item n 
+\end{itemize}
+
+\begin{enumerate}
+    \item Butterworth
+
+    \item Chebyshev
+    
+    \item Elliptic
+    
+    \item Bessel
+    
+    In the application in study, the group delay is a critical factor because the ECG signal is a time-domain signal, and the phase distortion can lead to a misinterpretation of the signal. So it is safe to say that the Bessel filter is the best choice for this application.
+\end{enumerate}
+
+\begin{figure}[H]   
+\begin{centering}
+    \begin{tikzpicture}[node distance=2cm]
+
+        % Blocks
+        \node (ntc) [block] {NTC Resistance};
+        \node (ohms) [block, right of=ntc, xshift=2.5cm] {Ohms to Voltage};
+        \node (mcu) [block, right of=ohms, xshift=1.5cm] {MCU};
+        \node (temp) [block, right of=mcu, xshift=1cm] {Temperature};
+    
+        % Arrows
+        \draw [arrow] (ntc) -- (ohms);
+        \draw [arrow] (ohms) -- (mcu);
+        \draw [arrow] (mcu) -- (temp);
+    
+    \end{tikzpicture}
+    
+    \caption{ NTC's block diagram }
+    \label{fig:NTCBlock}
+
+\end{centering}
+\end{figure}
+\begin{figure}[H]
+
+    \centering
+    \begin{subfigure}{0.4\textwidth}
+        \includegraphics*[scale = 0.7]{Images/NovaFctHor.png}
+        \caption{Nova logo horizontal}
+        \label{fig:first}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.4\textwidth}
+        \includegraphics*[scale = 0.05]{Images/NovaFctVer.png}
+        \caption{Nova Logo vertical}
+        \label{fig:second}
+    \end{subfigure}
+    
+    \caption{Nova Logos}
+    \label{fig:NovaLogos}
+\end{figure}
+
+
+Referece like this\textsuperscript{\cite{ESP32-datasheet}}
+% Add citation commands where necessary
+% Example: \cite{reference_label}
