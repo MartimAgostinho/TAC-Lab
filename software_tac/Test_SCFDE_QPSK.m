@@ -2,7 +2,7 @@
 EN=[-5:2:22]'+0*100; 
 en = 10 .^(EN/10);
 %NoQAM=10.^((EN+10*log10(4))/10);
-N=512;
+N=284;
 NSlot=1000;
 CHANNEL='RAYL';
 L=1; % L-th order diversity
