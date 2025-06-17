@@ -6,17 +6,15 @@
 
 This section details the two source-coding strategies \emph{Huffman coding} and a plain \emph{ASCII}. All scripts were written in \textsc{Matlab}.
 
-\subsubsection{Huffman encoder}
 \label{ssec:huffman}
 
-
-Firstly the number of bits in the bit-stream produced shall be divisible by 4, this is because the message will be sent with 16-QAM and each symbol has 4 bits. By doing this in this stage, the results for all modulators will be comparable, since they will be sending the same message. The padding was implemented by adding spaces at the end of the message until the huffman encoded message was divisible by 4.
+Firstly, for the \textbf{Huffman encoding}, the number of bits in the bit-stream produced shall be divisible by 4, this is because the message will be sent with 16-QAM and each symbol has 4 bits. By doing this in this stage, the results for all modulators will be comparable, since they will be sending the same message. The padding was implemented by adding spaces at the end of the message until the huffman encoded message was divisible by 4.
 
 The message, once padding has been applied, appears as follows:
 
 \begin{center}
     \begin{verbatim}
-        "polar codes are employed in 5g due better performance and simplicity   "
+"polar codes are employed in 5g due better performance and simplicity   "
     \end{verbatim}
     
 \end{center}
@@ -74,46 +72,17 @@ For the padded test sentence (71 symbols) the huffman alphabet is described by T
     \label{tab:huffCode}
 \end{table}
 
-This message has the following characteristics:
+The coding has the following characteristics:
 
 \begin{itemize}
-  \item bitstream length $\lvert c\rvert = 284$ bits,
-  \item average codeword length $\bar L = 4.00$ bits/symbol,
+  \item Bitstream Length $\lvert c\rvert = 284$ bits,
+  \item Average Code Length $\bar L = 4.00$ bits/symbol,
   \item Entropy $H(X)=3.95$ bits/symbol
 \end{itemize}
 
 
-\subsection{ASCII reference}
-\label{ssec:ascii}
 
-The benchmark encodes each character using its standard 8-bit ASCII
-representation (\lstinline|uint8| $\rightarrow$ \lstinline|de2bi|).  No padding
-is required because every symbol already expands to a full byte.
+The \textbf{ASCII} encoding works as a benchmark, each character using its standard 8-bit representation. No padding is required because very symbol uses a entire byte making it always divisible by 4. The 
 
-\vspace{0.5em}
-\noindent
-\textbf{Results} for the \emph{same} padded sentence:
-\begin{itemize}
-  \item bitstream length $\lvert c\rvert = 544$ bits,
-  \item average codeword length $\bar L = 8$ bits/symbol,
-  \item coding efficiency $H(X)/\bar L = 49.4\,\%$,
-  \item compression gain vs.\ Huffman: $544/284 \approx 1.92\times$ fewer bits.
-\end{itemize}
+There are somethings importante to note, as just said, the ASCII will be sending less symbols per phrase sent, since there is no padding. With Huffman the average number of bits sent, will be half the number bits comparing to ASCII, making it much more efficient but, this is for the specific case of sending this specific phrase. 
 
-
-\subsection{Scalability for channel simulation}
-
-Both encoders must supply at least $10^6$ bits to the modulator so that
-\textsc{BER}/\textsc{FER} curves exhibit the desired confidence
-intervals.  The scripts therefore replicate the base sequence until the
-threshold is reached:
-
-The procedure preserves the symbol statistics and avoids edge effects
-during convolutional/concatenated decoding.
-
-\subsection{Take-away} 
-Huffman coding achieves a near-ideal $99\%$ source-coding efficiency,
-reducing the payload by almost a factor of two relative to the naïve
-ASCII baseline.  This gain translates directly into higher spectral
-efficiency or, equivalently, a $3$ dB signal-to-noise margin when the
-system operates at a fixed code rate and modulation order.
