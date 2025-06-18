@@ -90,27 +90,41 @@ There are somethings importante to note, as just said, the ASCII will be sending
 \textcolor{red}{VER SE ]E VERDADE  In this context the huffman coding also works as a kind of error detection, since not all code can give a valid symbol.}
 
 \subsection{Mapper}
-  
-Because the probability of a bit error depends strongly on how we assign bit patterns to constellation points, this section details the mapping rules used for the two constellations required in the lab: \textbf{QPSK} (4-PSK) and \textbf{16-QAM}.
 
+For this labwork to different mapping strategies were used, QPSK and 16-QAM.
 
-\subsubsection{QPSK}%
-Quadrature Phase-Shift Keying places four equally spaced points on the unit circle:
+\textbf{QPSK} places four equally spaced points on the unit circle:
 \[
 s_k = e^{j\frac{\pi}{2}\left(k+\tfrac12\right)}, \qquad k\in\{0,1,2,3\}.
 \]
 
 Figure \ref{fig:QPKS_Mapping}, shows the mapping in the cartesian plane.
 
-\begin{figure}[H]
+\begin{figure}[h]
   \centering
   \includegraphics[width=0.4\textwidth]{Images/QPKS_Mapping.png}
-  \caption{QPKS mapping.\cite{Sadough2012_UWB_OFDM}}
+  \caption{QPSK mapping.\cite{Sadough2012_UWB_OFDM}}
   \label{fig:QPKS_Mapping}
 \end{figure}
 
 The mapper groups the encoded bit stream into two-bit tuples `$(b_1,b_0)$, converts each tuple to an integer index $(k =2b_1+b_0)$ and outputs \(s_k\).
 
 
-\subsubsection{16-QAM}
-A 16-QAM constellation can be labelled in several ways. Three commonly cited schemes are
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.6\textwidth]{Images/16-QAM_Constellation.png}
+  \caption{16-QAM Gray mapping.}
+  \label{fig:QAM_Mapping}
+\end{figure}
+
+
+A square $4\times4$ 16-QAM constellation is used. What changes comparing to the previous mapping approach is the fact that the amplitude also changes and for this specific mapping the phase and amplitude will not change consistently. The symbol position in the cartesian frame will be:
+\[
+I,R \in \{\pm3,\;\pm1\},\qquad
+\]
+
+The constellation points are labelled with \emph{Gray coding}, thus every nearest neighbour differs in \emph{exactly one} bit. Figure \ref{fig:QAM_Mapping}, shows how the codes are mapped.
+ 
+Gray mapping was chosen because it minimises the bit‑error probability in an AWGN channel: a single symbol error (the most probable error event) flips only one bit, whereas natural or set‑partition labelling flips two or more bits on the same error.  
+
+It is important to note that the QPSK and 16-QAM will have different bit energy, because they have different amplitudes. This will affect the SNR differently.
