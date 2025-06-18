@@ -8,65 +8,66 @@ This section details the two source-coding strategies \emph{Huffman coding} and 
 
 \label{ssec:huffman}
 
-Firstly, for the \textbf{Huffman encoding}, the number of bits in the bit-stream produced shall be divisible by 4, this is because the message will be sent with 16-QAM and each symbol has 4 bits. By doing this in this stage, the results for all modulators will be comparable, since they will be sending the same message. The padding was implemented by adding spaces at the end of the message until the huffman encoded message was divisible by 4.
+Firstly, for the \textbf{Huffman encoding}, the number of bits in the bit-stream produced shall be divisible by 4, this is because the message will be sent with 16-QAM and each symbol has 4 bits. The padding was implemented by adding spaces at the end of the message until the huffman encoded message was divisible by 4, doing it this way makes the huffman more efficient because the probability of a space character will increase. Later for implementations reasons the number of QAM symbols needed to be an even number, hence, the padding was added until it was divisible by 8. 
 
 The message, once padding has been applied, appears as follows:
 
 \begin{center}
     \begin{verbatim}
-"polar codes are employed in 5g due better performance and simplicity   "
+"polar codes are employed in 5g due better performance and simplicity     "
     \end{verbatim}
     
 \end{center}
 
 For the padded test sentence (71 symbols) the huffman alphabet is described by Table \ref{tab:huffCode}.
 
-\begin{table}[H]
+\begin{table}[h]
     \centering
     \caption{Message Huffman Coding}
     \begin{tabularx}{\textwidth}{>{\centering\arraybackslash}X >{\centering\arraybackslash}X >{\centering\arraybackslash}X >{\centering\arraybackslash}X}
         \toprule
         \textbf{Character} & \textbf{Probability} & \textbf{Code} & \textbf{Code Length} \\
         \midrule
-        ' ' & 0.183099 & 11 & 2\\
         \midrule
-        '5' & 0.014085 & 0000011 & 7\\
+        ' ' & 0.205479 & 11 & 2\\
         \midrule
-        'a' & 0.056338 & 0111 & 4\\
+        '5' & 0.013699 & 0000011 & 7\\
         \midrule
-        'b' & 0.014085 & 0110001 & 7\\
+        'a' & 0.054795 & 0111 & 4\\
         \midrule
-        'c' & 0.042254 & 00100 & 5\\
+        'b' & 0.013699 & 0110001 & 7\\
         \midrule
-        'd' & 0.056338 & 1001 & 4\\
+        'c' & 0.041096 & 00100 & 5\\
         \midrule
-        'e' & 0.126761 & 010 & 3\\
+        'd' & 0.054795 & 1001 & 4\\
         \midrule
-        'f' & 0.014085 & 011001 & 6\\
+        'e' & 0.123288 & 010 & 3\\
         \midrule
-        'g' & 0.014085 & 0110000 & 7\\
+        'f' & 0.013699 & 011001 & 6\\
         \midrule
-        'i' & 0.056338 & 1010 & 4\\
+        'g' & 0.013699 & 0110000 & 7\\
         \midrule
-        'l' & 0.042254 & 00101 & 5\\
+        'i' & 0.054795 & 1010 & 4\\
         \midrule
-        'm' & 0.042254 & 00010 & 5\\
+        'l' & 0.041096 & 00101 & 5\\
         \midrule
-        'n' & 0.042254 & 00001 & 5\\
+        'm' & 0.041096 & 00010 & 5\\
         \midrule
-        'o' & 0.056338 & 1011 & 4\\
+        'n' & 0.041096 & 00001 & 5\\
         \midrule
-        'p' & 0.056338 & 1000 & 4\\
+        'o' & 0.054795 & 1011 & 4\\
         \midrule
-        'r' & 0.070423 & 0011 & 4\\
+        'p' & 0.054795 & 1000 & 4\\
         \midrule
-        's' & 0.028169 & 01101 & 5\\
+        'r' & 0.068493 & 0011 & 4\\
         \midrule
-        't' & 0.042254 & 00011 & 5\\
+        's' & 0.027397 & 01101 & 5\\
         \midrule
-        'u' & 0.014085 & 0000010 & 7\\
+        't' & 0.041096 & 00011 & 5\\
         \midrule
-        'y' & 0.028169 & 000000 & 6\\
+        'u' & 0.013699 & 0000010 & 7\\
+        \midrule
+        'y' & 0.027397 & 000000 & 6\\
         \bottomrule
     \end{tabularx}
     \label{tab:huffCode}
@@ -75,9 +76,9 @@ For the padded test sentence (71 symbols) the huffman alphabet is described by T
 The coding has the following characteristics:
 
 \begin{itemize}
-  \item Bitstream Length $\lvert c\rvert = 284$ bits,
-  \item Average Code Length $\bar L = 4.00$ bits/symbol,
-  \item Entropy $H(X)=3.95$ bits/symbol
+  \item Bitstream Length $\lvert c\rvert = 288$ bits,
+  \item Average Code Length $\bar L = 3.9452$ bits/symbol,
+  \item Entropy $H(X)=3.9088$ bits/symbol
 \end{itemize}
 
 
@@ -86,3 +87,30 @@ The \textbf{ASCII} encoding works as a benchmark, each character using its stand
 
 There are somethings importante to note, as just said, the ASCII will be sending less symbols per phrase sent, since there is no padding. With Huffman the average number of bits sent, will be half the number bits comparing to ASCII, making it much more efficient but, this is for the specific case of sending this specific phrase. 
 
+\textcolor{red}{VER SE ]E VERDADE  In this context the huffman coding also works as a kind of error detection, since not all code can give a valid symbol.}
+
+\subsection{Mapper}
+  
+Because the probability of a bit error depends strongly on how we assign bit patterns to constellation points, this section details the mapping rules used for the two constellations required in the lab: \textbf{QPSK} (4-PSK) and \textbf{16-QAM}.
+
+
+\subsubsection{QPSK}%
+Quadrature Phase-Shift Keying places four equally spaced points on the unit circle:
+\[
+s_k = e^{j\frac{\pi}{2}\left(k+\tfrac12\right)}, \qquad k\in\{0,1,2,3\}.
+\]
+
+Figure \ref{fig:QPKS_Mapping}, shows the mapping in the cartesian plane.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{Images/QPKS_Mapping.png}
+  \caption{QPKS mapping.\cite{Sadough2012_UWB_OFDM}}
+  \label{fig:QPKS_Mapping}
+\end{figure}
+
+The mapper groups the encoded bit stream into two-bit tuples `$(b_1,b_0)$, converts each tuple to an integer index $(k =2b_1+b_0)$ and outputs \(s_k\).
+
+
+\subsubsection{16-QAM}
+A 16-QAM constellation can be labelled in several ways. Three commonly cited schemes are

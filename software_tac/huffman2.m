@@ -14,7 +14,7 @@ while true %Create Padding
   encodedMessage = huffmanenco(sig, dict);
 
       % stop when bit-stream length is divisible by 8
-    if mod(length(encodedMessage), 4) == 0
+    if mod(length(encodedMessage), 8) == 0
         break;
     endif
 
@@ -25,9 +25,9 @@ endwhile
 printf('New String with padding:\n');
 printf("|%s|\n",message);
 
-printf("Char|Prob|Code|Code Lenght \n")
-avglen = 0
-entropy = 0
+printf("Char|Prob|Code|Code Lenght \n");
+avglen = 0;
+entropy = 0;
 for k = 1:length(symbols)
   printf("    \\midrule\n");
   printf("    \'%c\' & %f & ",symbols(k),prob(k))
@@ -43,8 +43,6 @@ decodedSignal = huffmandeco(encodedMessage, dict);
 decodedMessage = symbols(decodedSignal);
 
 codeLengths = cellfun(@length, dict(:,2));
-codeLengths
-prob
 avglen = sum(prob .* codeLengths);
 
 entropy = -sum(prob .* log2(prob));
