@@ -5,7 +5,7 @@ message = 'polar codes are employed in 5g due better performance and simplicity'
 
 %huffman coding
 [encodedMessage_huffman, dict_huffman, message_huffman]=huffmancode(message);
-
+fprintf('Message after padding: |%s|\n',message_huffman);
 %ascii coding
 ascii = uint8(message);
 bitStream_ascii  = reshape(de2bi(ascii, 8, 'left-msb').', 1, []);
@@ -21,7 +21,7 @@ n_ascii = ceil(1e6 / len_ascii);
 
 %meter 16qam, ofdm, passar pelo canal e sacar tudo de fora
 
-bitaux = reshape(encodedMessage_huffman, 4, []).';
+bitaux = reshape(encodedMessage_huffman, 4, []).'
 bit1_huffman = bitaux(:, 1);
 bit2_huffman = bitaux(:, 2);
 bit3_huffman = bitaux(:, 3);

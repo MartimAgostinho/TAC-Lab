@@ -11,6 +11,8 @@ Tg=0.2*Ts; % Cyclic prefix durration
 f=[-N/2:N/2-1]'/Ts; % frequencies
 levels = [-3, -1, 1, 3];
 
+%%recebe sms e manda simb, QPSK e QAM
+
 NRay=1;
 Eb=1;
 Eb_qpsk=N;          %Energia de bit QPSK
