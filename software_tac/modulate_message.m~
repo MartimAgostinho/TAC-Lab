@@ -123,8 +123,8 @@ end
 % plot(real(symbols), imag(symbols), 'o', 'MarkerSize',8, 'MarkerFaceColor',[0 101/255 189/255]);
 % grid on;
 % axis equal;
-% xlabel('Real');
-% ylabel('Imaginary');
+% xlabel('Imaginary');
+% ylabel('Real');
 % title('16-QAM Constellation');
 % hold on;
 % xlim([-4 4])
