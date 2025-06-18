@@ -13,7 +13,7 @@ function [encodedMessage, dict, message]=huffmancode(message)
         dict            = huffmandict(symbols,prob);                % build Huffman dictionary
         encodedMessage  = huffmanenco(msgCodes,dict);               % encode directly as ASCII values
 
-        if mod(numel(encodedMessage),4)==0      % divisible by 8 bits?  yes → stop padding
+        if mod(numel(encodedMessage),8)==0      % divisible by 8 bits?  yes → stop padding
             break;
         end
 
