@@ -27,7 +27,7 @@ bit3_huffman = bitaux(:, 3);
 bit4_huffman = bitaux(:, 4);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%GRAY(GAY)%%%%%%%%%%
 % ✅ Mapeamento Gray (TX)
-gray_map = [0 1 3 2];  % 00->0, 01->1, 11->3, 10->2
+gray_map = [0; 1; 3; 2];  % 00->0, 01->1, 11->3, 10->2
 symI = gray_map(bit1_huffman*2 + bit2_huffman + 1);  % índice 0-based
 symQ = gray_map(bit3_huffman*2 + bit4_huffman + 1);
 B1 = 2 * symI - 3;  % Níveis I: -3, -1, 1, 3
