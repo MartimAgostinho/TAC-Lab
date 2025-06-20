@@ -19,6 +19,7 @@
         %in a rayleigh channel it is necessary to interleave bits before modulation
         
         modSignal = step(hMod, encodedData);
+        
         receivedSignal = step(hChan, modSignal);
         %in a rayleigh channel it is necessary to de-interleave demodulated bits before
         %decoding
@@ -29,4 +30,4 @@
         errorStats = step(hError, data, receivedBits);
     end
     fprintf('Error rate = %f\nNumber of errors = %d\nTotal bits = %d\n', ...
-    errorStats(1), errorStats(2), errorStats(3))   
+    errorStats(1), errorStats(2), errorStats(3)) 

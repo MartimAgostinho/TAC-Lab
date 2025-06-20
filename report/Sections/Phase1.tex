@@ -122,6 +122,14 @@ The theoretical bit-error probability for QPSK in an AWGN channel is given by Eq
 	\label{fig:QAM_Mapping}
 \end{figure}
 
+
+For \textbf{QPSK}, demodulation is performed by measuring the phase angle of the received symbol and assigning it to one of four sectors:
+\[
+\hat{k} = \text{mod}\left( \text{round}\left( \frac{\angle s - \pi/4}{\pi/2} \right), 4 \right)
+\]
+Each value of $\hat{k}$ is then mapped back to a 2-bit Gray code.
+
+
 A square $4\times4$ 16-QAM constellation is used. What changes comparing to the previous mapping approach is the fact that the amplitude also changes and for this specific mapping the phase and amplitude will not change consistently. The symbol position in the cartesian frame will be:
 \[
 I,R \in \{\pm3,\;\pm1\}
@@ -140,6 +148,17 @@ The theoretical bit-error probability for 16-QAM in an AWGN channel can be appro
 
 It is important to note that the QPSK and 16-QAM will have different bit energy because they have different amplitudes. This will affect the SNR differently.
 
+For \textbf{16-QAM}, decisions are made independently for the in-phase (I) and quadrature (Q) components:
+\begin{itemize}
+  \item The sign of I and Q determines the most significant bit.
+  \item The absolute value determines whether the symbol lies on an inner or outer level (threshold at 2).
+\end{itemize}
+Specifically:
+\begin{align*}
+  b_0 &= I > 0, \quad b_1 = |I| < 2 \\
+  b_2 &= Q > 0, \quad b_3 = |Q| < 2
+\end{align*}
+The bits are then grouped as $(b_0, b_1, b_2, b_3)$ to form the 4-bit symbol estimate.
 
 \subsection{Channel}
 
