@@ -111,7 +111,7 @@ The mapper groups the encoded bit stream into two-bit tuples $(b_1,b_0)$, conver
 
 The theoretical bit-error probability for QPSK in an AWGN channel is given by Equation \ref{eq:probErrQPSK}.
 \begin{equation}
-  P_b^{\text{QPSK}} = Q\left(\sqrt{2\frac{E_b}{N_0}}\right)
+  P_b^{\text{QPSK}} = Q\left(\sqrt{2\frac{E_b}{N_0}}\right)\text{\cite{Work_TAC2025}}
   \label{eq:probErrQPSK}
 \end{equation}
 
@@ -124,7 +124,7 @@ The theoretical bit-error probability for QPSK in an AWGN channel is given by Eq
 
 A square $4\times4$ 16-QAM constellation is used. What changes comparing to the previous mapping approach is the fact that the amplitude also changes and for this specific mapping the phase and amplitude will not change consistently. The symbol position in the cartesian frame will be:
 \[
-I,R \in \{\pm3,\;\pm1\},\qquad
+I,R \in \{\pm3,\;\pm1\}
 \]
 
 The constellation points are labelled with \emph{Gray coding}, thus every nearest neighbour differs in \emph{exactly one} bit. Figure \ref{fig:QAM_Mapping}, shows how the codes are mapped.
@@ -134,12 +134,11 @@ Gray mapping was chosen because it minimises the bit‑error probability in an A
 The theoretical bit-error probability for 16-QAM in an AWGN channel can be approximated by Equation \ref{eq:probErr16QAM}.
 
 \begin{equation}
-  
-  P_b^{\text{16QAM}} \approx \frac{3}{4}Q\left(\sqrt{\frac{4}{5}\frac{E_b}{N_0}}\right)
+  P_b^{\text{16QAM}} \approx \frac{3}{4}Q\left(\sqrt{\frac{4}{5}\frac{E_b}{N_0}}\right)\text{\cite{Work_TAC2025}}
   \label{eq:probErr16QAM}
 \end{equation}
 
-It is important to note that the QPSK and 16-QAM will have different bit energy, because they have different amplitudes. This will affect the SNR differently.
+It is important to note that the QPSK and 16-QAM will have different bit energy because they have different amplitudes. This will affect the SNR differently.
 
 
 \subsection{Channel}

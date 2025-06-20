@@ -36,13 +36,13 @@ encodedMessage_ascii  = reshape(de2bi(ascii, 8, 'left-msb').', 1, []);
 len_ascii = numel(encodedMessage_ascii);
 n_ascii = ceil(1e6 / len_ascii);
 
-num_sym = numel(message);           % símbolos originais
-l_bar = len_ascii / num_sym;            % comprimento médio (bits/símbolo)
+num_sym = numel(message);      % símbolos originais
+l_bar = len_ascii / num_sym;   % comprimento médio (bits/símbolo)
 
 N = len_ascii / 4;                      % subportadoras OFDM por slot
-T_symbol = Ts + Tg;                         % duração total OFDM
-Rs = N / T_symbol;                          % símbolos/s
-Rb = l_bar * Rs;                            % bits/s
+T_symbol = Ts + Tg;                     % duração total OFDM
+Rs = N / T_symbol;                      % símbolos/s
+Rb = l_bar * Rs;                        % bits/s
 
 fprintf('Comprimento médio ASCII: %.2f bits/símbolo\n', l_bar);
 fprintf('Taxa de símbolos Rs = %.2f sym/s, taxa de bits Rb = %.2f bits/s\n', Rs, Rb);
@@ -50,7 +50,7 @@ fprintf('Taxa de símbolos Rs = %.2f sym/s, taxa de bits Rb = %.2f bits/s\n', Rs
 % N = len_huffman/4;
 % NSlot = n_huffman;
 
-N = len_ascii/4;
+N = len_ascii/4; %Numero de Simbolos
 NSlot = n_ascii;
 
 f=[-N/2:N/2-1]'/Ts; % frequencies

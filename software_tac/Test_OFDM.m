@@ -2,7 +2,7 @@
 EN=[-5:2:22]'+0*100; en = 10 .^(EN/10) ;
 N=512;
 NSlot=1000;
-CHANNEL='XTAP';
+CHANNEL='AWGN';
 L=2; % L-th order diversity
 Ts=4e-6; % Block duration
 Tg=0.2*Ts; % Cyclic prefix durration
@@ -96,7 +96,7 @@ end;
 % BER in Rayleigh channel and L-branch diversity [Proakis]
 aux=sqrt(en./(1+en));Pb_tr=0;
 for l=0:L-1
-    Pb_tr=Pb_tr+combin(L-1+l,l)*((1+aux)/2).^l;
+    Pb_tr=Pb_tr+Combin(L-1+l,l)*((1+aux)/2).^l;
 end;
 Pb_tr=Pb_tr.*((1-aux)/2).^L;
 

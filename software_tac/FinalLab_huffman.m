@@ -1,6 +1,6 @@
 EN=[-5:2:22]'+0*100; 
 en = 10 .^(EN/10);
-CHANNEL='RAYL';
+CHANNEL='AWGN';
 L=1; % L-th order diversity
 Ts=4e-6; % Block duration
 Tg=0.2*Ts; % Cyclic prefix durration
@@ -21,7 +21,7 @@ NErr=zeros(NEN,1);
 message = 'polar codes are employed in 5g due better performance and simplicity';
 
 %huffman coding
-[encodedMessage_huffman, dict_huffman, message_huffman]=huffmancode(message);
+[encodedMessage_huffman, dict_huffman, message_huffman]=huffman_encode(message);
 fprintf('Message after padding: |%s|\n',message_huffman);
 % %ascii coding
 % ascii = uint8(message);
@@ -49,7 +49,7 @@ fprintf('Taxa de símbolos Rs = %.2f sym/s, taxa de bits Rb = %.2f bits/s\n', Rs
 
 
 %meter 16qam, ofdm, passar pelo canal e sacar tudo de fora
-N = len_huffman/4;
+N = len_huffman/4
 NSlot = n_huffman;
 f=[-N/2:N/2-1]'/Ts; % frequencies
 for nn=1:NSlot
@@ -68,7 +68,7 @@ for nn=1:NSlot
        elseif (strcmp(CHANNEL,'RAYL'))
         Hk=(randn(N,L)+j*randn(N,L))/sqrt(2);
     elseif (strcmp(CHANNEL,'AWGN'))
-        Hk=ones(N,L).*exp(j*2*pi*rand(N,L));       
+        Hk=ones(N,L).*exp(j*2*pi*rand(N,L))     
     end        
     H2k=abs(Hk).^2;
     if (L==1) sH2k=H2k; else sH2k=sum(H2k')'; end
@@ -84,7 +84,6 @@ for nn=1:NSlot
     B2 = 2*(2*bit3 + bit4) -3;
 
     An_Tx = B1+j*B2;
-
 
     Ak_Tx=fftshift(fft(fftshift(An_Tx)));
 
