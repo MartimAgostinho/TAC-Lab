@@ -17,11 +17,13 @@ nBlocks = ceil(frmLen / blockSize);
 n_excess = nBlocks * blockSize -frmLen ;
 intrlvrIndices_block = randperm(nBlocks * wordSize);
 
+intrlvrIndices_blockconv = randperm(3*nBlocks * wordSize);
+
 intrlvrIndices = randperm(frmLen*3);
 trellis = poly2trellis(7,[165 171 133]);
 
 constellation = reshape([-3 -1 1 3] + 1j*[3 1 -1 -3].', [], 1);
-constellation1 = constellation';
+
 
 hconv = comm.ConvolutionalEncoder('TrellisStructure', trellis);
 qamMod = comm.GeneralQAMModulator(constellation');
@@ -86,9 +88,10 @@ for nEN=1:NEN
     
 end
 
+figure()
 semilogy(EN,BER,'k-*')
 xlabel('E_b/N_0(dB)'),ylabel('BER')
-axis([-5 20 1e-4 1])
+axis([-5 20 1e-7 1])
 
 % -------------- Blocks -------------
 
@@ -141,21 +144,110 @@ for nEN=1:NEN
     NErr3Block(nEN,1)=errorStatsBlock(3);
 end
 
+
 BERBlock=NErr1Block;
 NerrosBlock=NErr2Block;
 bitsTotalBlock=NErr3Block;
 
+P0Block = (1 - BERBlock).^blockSize;
+P1Block = blockSize .* BERBlock .* (1 - BERBlock).^(blockSize - 1);
+
+PretransBlock = 1 - (P0Block + P1Block);  % vetor da probabilidade de retransmissão
+
 fprintf('\n\n\n ######## Block Codes ######### \n\n\n')
 for nEN=1:NEN
     
-    fprintf('----- SNR %d ----\n', EN(nEN))
+    fprintf('\n\n----- SNR %d ----\n\n', EN(nEN))
     fprintf('Error rate = %f\nNumber of errors = %d\nTotal bits = %d\n', ...
     BERBlock(nEN), NerrosBlock(nEN), bitsTotalBlock(nEN)) 
     
 end
 
-semilogy(EN,BER,'k-*')
+
+figure()
+semilogy(EN,BERBlock,'k-*', EN,PretransBlock,'b-*')
 xlabel('E_b/N_0(dB)'),ylabel('BER')
-axis([-5 20 1e-4 1])
+axis([-5 20 1e-7 1])
+
+
+% -------------- Blocks and Conv -------------
+
+for nEN=1:NEN
+    hChanAWGN  = comm.AWGNChannel('NoiseMethod', 'Variance', 'Variance', noiseVar(nEN));
+    %hChanRAYL  = comm.RayleighChannel('PathDelays',0, 'AveragePathGains',0,'NormalizePathGains',1, 'MaximumDopplerShift',0);
+    % Canal Rayleigh plano (flat-fading) gerado manualmente
+    hBlockConv = (randn(270, 1) + 1j * randn(270, 1)) / sqrt(2);
+    
+    reset(hError);
+    reset(hconvde);
+    for frmIdx = 1:10000
+        dataBlockConv = randi(s, [0 1], frmLen, 1);
+        dataPaddedConv = [dataBlockConv; zeros(n_excess,1)];
+        dataMatrixConv = reshape(dataPaddedConv, blockSize, []).';
+        codedMatrixConv = zeros(nBlocks, wordSize);
+        for i = 1:nBlocks
+            codedMatrixConv(i, :) = encode(dataMatrixConv(i, :)', wordSize, blockSize, 'hamming/binary')';
+        end
+
+        % Vetor codificado completo
+        encodedDataBlockConv = reshape(codedMatrixConv.', [], 1);
+        
+        %conv
+        encodedDataBlockConvFinal = step(hconv, encodedDataBlockConv);
+        
+        interDataBlockConv = intrlv(encodedDataBlockConvFinal, intrlvrIndices_blockconv);
+        encodedDataMatrixBlockConv = reshape(interDataBlockConv, 4, []).';        % Cada linha: 4 bits
+        symbolsBlockConv = bi2de(encodedDataMatrixBlockConv, 'left-msb');
+        %in a rayleigh channel it is necessary to interleave bits before modulation
+
+        modSignalBlockConv = step(qamMod, symbolsBlockConv);
+        
+        channelSignalRaylBlockConv = modSignalBlockConv .* hBlockConv;
+        channelSignalBlockConv = step(hChanAWGN, channelSignalRaylBlockConv);
+
+        %in a rayleigh channel it is necessary to de-interleave demodulated bits before
+
+        %decoding
+        eqSignalBlockConv = channelSignalBlockConv ./ hBlockConv;
+        receivedSignalBlockConv = step(qamdemod, eqSignalBlockConv);
+        
+        % Convert received signal to log-likelihood ratios for decoding
+        deinterSignalBlockConv = deintrlv(receivedSignalBlockConv, intrlvrIndices_blockconv);
+        receivedBitsBlockConv  = step(hconvde, deinterSignalBlockConv);
+        receivedBitsBlockConvFinal  = decode(receivedBitsBlockConv,wordSize,blockSize,'hamming/binary');
+
+        errorStatsBlockConv = step(hError, dataPaddedConv, receivedBitsBlockConvFinal);
+
+
+    end
+    NErr1BlockConv(nEN,1)=errorStatsBlockConv(1);
+    NErr2BlockConv(nEN,1)=errorStatsBlockConv(2);
+    NErr3BlockConv(nEN,1)=errorStatsBlockConv(3);
+end
+
+
+BERBlockConv=NErr1BlockConv;
+NerrosBlockConv=NErr2BlockConv;
+bitsTotalBlockConv=NErr3BlockConv;
+
+P0BlockConv = (1 - BERBlockConv).^blockSize;
+P1BlockConv = blockSize .* BERBlockConv .* (1 - BERBlockConv).^(blockSize - 1);
+
+PretransBlockConv = 1 - (P0BlockConv + P1BlockConv);  % vetor da probabilidade de retransmissão
+
+fprintf('\n\n\n ######## Block Codes ######### \n\n\n')
+for nEN=1:NEN
+    
+    fprintf('\n\n----- SNR %d ----\n\n', EN(nEN))
+    fprintf('Error rate = %f\nNumber of errors = %d\nTotal bits = %d\n', ...
+    BERBlockConv(nEN), NerrosBlockConv(nEN), bitsTotalBlockConv(nEN)) 
+    
+end
+
+
+figure()
+semilogy(EN,BERBlockConv,'k-*', EN,PretransBlockConv,'b-*')
+xlabel('E_b/N_0(dB)'),ylabel('BER')
+axis([-5 20 1e-7 1])
 %fprintf('Error rate = %f\nNumber of errors = %d\nTotal bits = %d\n', ...
 %errorStats(1), errorStats(2), errorStats(3))   
