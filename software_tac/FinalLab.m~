@@ -1,0 +1,25 @@
+message = 'polar codes are employed in 5g due better performance and simplicity';
+
+BitStream = huffman_encode(message);
+
+[BER_arr,SNR_arr] = channel(BitStream,'AWGN','QAM');
+
+figure;
+semilogy(SNR_arr,BER_arr  ,'b*:' );      % Rayleigh theory  (blue dotted line + stars)
+
+xlabel('E_b/N_0 (dB)');
+ylabel('Bit Error Rate (BER)');
+title (sprintf('BER vs. E_b/N_0 with L = %d-branch MRC Diversity', 1));
+
+%legend({'Simulation', 'AWGN theory', 'Rayleigh theory'}, ...
+       %'Location', 'southwest');   % put the legend in the lower-left corner
+
+axis([-5 20 1e-4 1]);  % keep your original zoom
+grid on;               % optional—but useful on a semilogy plot
+
+% [BitStream_Huff, dict, ~] = huffmancode(message)
+% bitStream = asciicode_encode(message)
+% % 
+% CHANNEL=['RAYL','AWGN'];
+
+

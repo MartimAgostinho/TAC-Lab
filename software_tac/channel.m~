@@ -1,0 +1,103 @@
+function [BER_arr,SNR_arr] = channel(BitStream,CHANNEL,modulation)
+
+
+    if nargin == 0          % self-test section — runs only when no inputs
+        nBits      = 4096;
+        BitStream  = randi([0 1], nBits, 1);
+        CHANNEL    = 'AWGN';
+        modulation = 'QPSK';
+        [BER_arr, SNR_arr] = channel(BitStream, CHANNEL, modulation);
+        return
+    end
+
+    %BitStream = BitStream';
+    Stream_len = length(BitStream);
+    n_it = ceil(1e6 / Stream_len) %Numero de mensagens enviadas
+
+    EN=[-5:2:22]'+0*100; en = 10 .^(EN/10) ;
+    NEN=length(EN);
+    NErr=zeros(NEN,1);
+    % Se der raia pro qpsk isto deve estar mal
+    N = Stream_len / 4     % subportadoras OFDM por slot
+
+    L=1; % L-th order diversity
+    Ts=4e-6; % Block duration
+    %Tg=0.2*Ts; % Cyclic prefix durration
+    %f=[-N/2:N/2-1]'/Ts; % frequencies
+    Eb = 1;
+    %T_symbol = Ts + Tg;     % duração total OFDM
+
+
+    if strcmp(modulation,'QPSK') ~= 0
+        sigma =sqrt(Eb/2 ./en); 
+
+    elseif strcmp(modulation,'16QAM') ~= 0
+        Es = 10;
+        sigma=sqrt(Es/2/4 ./en); 
+    else
+        fprintf('ERRO: Wrong Modulation Value')
+        return
+    end
+    Symb_Stream = modul8(BitStream, modulation).';
+
+    %meter 16qam, ofdm, passar pelo canal e sacar tudo de fora
+    NSlot = n_it;
+    message_all = zeros(NEN,length(BitStream));
+    for nn=1:NSlot
+
+
+        if (CHANNEL=='RAYL')
+            Hk=(randn(N,L)+j*randn(N,L))/sqrt(2);
+        elseif (CHANNEL=='AWGN')
+            Hk=ones(N,L).*exp(j*2*pi*rand(N,L));
+        end;
+        H2k=abs(Hk).^2;
+        if (L==1) sH2k=H2k; else sH2k=sum(H2k')'; end;
+        An_Tx = Symb_Stream;
+        Ak_Tx=fftshift(fft(fftshift(An_Tx)));
+        %an_Tx=fftshift(ifft(fftshift(Ak_Tx)));
+        Es = mean(abs(An_Tx).^2);
+        sigma = sqrt(Es ./ (2 * en * 4));
+        for nEN=1:NEN
+            Yk=zeros(N,L);
+            for l=1:L
+               
+                Yk(:,l)=Ak_Tx.*Hk(:,l)+(randn(N,1)+j*randn(N,1))*sigma(nEN);
+                
+            end;
+            YIk=0;
+            for l=1:L
+                YIk = sum(Yk .* conj(Hk), 2) ./ sH2k;%YIk +Yk(:,l).*conj(Hk(:,l));
+            end;
+            Yin = fftshift(ifft(fftshift(YIk)));
+            Ak_Rx=demodul8(Yin,modulation).';
+            
+            if sum(BitStream ~=Ak_Rx) ~= 0
+                sum(BitStream ~=Ak_Rx)
+            end;
+            NErr(nEN,1)=NErr(nEN,1)+sum(BitStream ~=Ak_Rx);
+        end;
+
+        if (rem(nn,100)==0) nn, end;
+    end;
+    bitsPerSym=2+2*strcmpi(modulation,'16QAM');
+
+    BER_arr =NErr./( NSlot*N*bitsPerSym);
+    SNR_arr = EN;
+end
+
+% 
+% figure;
+% semilogy( EN, Pb     ,'g-*', ...   % simulated BER (green stars + solid line)
+%           EN, PbAWGN ,'b:' , ...   % AWGN theory      (blue dotted line)
+%           EN, Pb_tr  ,'b*:' )      % Rayleigh theory  (blue dotted line + stars)
+% 
+% xlabel('E_b/N_0 (dB)');
+% ylabel('Bit Error Rate (BER)');
+% title (sprintf('BER vs. E_b/N_0 with L = %d-branch MRC Diversity', L));
+% 
+% legend({'Simulation', 'AWGN theory', 'Rayleigh theory'}, ...
+%        'Location', 'southwest');   % put the legend in the lower-left corner
+% 
+% axis([-5 20 1e-4 1]);  % keep your original zoom
+% grid on;               % optional—but useful on a semilogy plot
