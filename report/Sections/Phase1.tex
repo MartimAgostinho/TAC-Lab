@@ -89,8 +89,8 @@ There are some important notes to take, as just said, the ASCII will be sending 
 
 \textcolor{red}{VER SE ]E VERDADE  In this context the huffman coding also works as a kind of error detection, since not all code can give a valid symbol.}
 
-\subsection{Mapper}
-
+\subsection{Modulation}
+\label{ssec:modulations}
 For this labwork, different mapping strategies were used, QPSK and 16-QAM.
 
 \textbf{QPSK} places four equally spaced points on the unit circle:
@@ -177,85 +177,34 @@ For this channel transmitted symbols experience only additive noise—typically 
 Unlike AWGN, a Rayleigh channel models wireless environments where multiple paths cause random amplitude and phase fluctuations (flat fading). Each transmitted symbol is multiplied by a randomly varying complex channel gain with a Rayleigh-distributed amplitude. Some symbols experience deep fades with low instantaneous SNR, leading to bursts of bit errors. Thus, Rayleigh channels typically exhibit higher BER and a slower improvement as average SNR increases compared to AWGN. As a result, achieving very low error rates in Rayleigh fading typically demands stronger error-correction coding or additional diversity schemes.
 
 \subsubsection{Results}
-
 \label{sec:channel_results}
 
-\subsubsection*{Test setup}
-The experiment was run twice with the same plain-text message
+In order to get the BER as a function of SNR, two bit streams were created with the two methods discussed in section \ref{ssec:huffman}, Huffman and ASCII encoding. Results for both bit streams should be identical. 
 
-\begin{quote}
-\ttfamily
-polar codes are employed in 5g due better performance and simplicity
-\end{quote}
+In each case the resulting bit stream was transmitted over four combinations, the two channels, AWGN and Rayleigh, with the two modulations discussed in section \ref{ssec:modulations}, QPSK and 16QAM.
 
-\noindent
-but using \textbf{two source encoders:}
-\begin{enumerate}
-\item fixed--length \textbf{ASCII} (8\,bits/char)
-\item variable-length \textbf{Huffman} coding (average 4.09\,bits/char)
-\end{enumerate}
-In each case the resulting bit stream was transmitted over four channel–modulation combinations:
-\[
-\text{AWGN / Rayleigh}\;\;\times\;\;\text{QPSK / 16-QAM}.
-\]
-For every \(E_b/N_0\) point the simulator sent approximately \(10^9\) data bits,
-demodulated the received symbols, and counted bit errors to obtain an unbiased
-Monte-Carlo estimate of the BER.
+Although previously the goal was set to send 1 million bits, but with this number of bits, for some combinations there were no BER points, meaning never a error occurred, hence the number of bits was set to $10^{9}$, this is overkill but made more accurate graphs. 
 
-\subsubsection*{Results}
 
-\begin{figure}[h]
-   \centering
-   \includegraphics[width=0.8\linewidth]{Images/ascii_encode.png}
-   \caption{BER vs.\ $E_b/N_0$ for the ASCII-encoded stream.}
-   \label{fig:ascii_BER}
+\begin{figure}[H]
+
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics*[scale = 0.18]{Images/ascii_encode.png}
+        \caption{ASCII-encoded stream.}
+        \label{fig:ascii_BER}
+    \end{subfigure}
+    %\hfill
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics*[scale = 0.19]{Images/huffman_encode.png}
+        \caption{Huffman-encoded stream.}
+        \label{fig:huffman_BER}
+    \end{subfigure}
+    
+    \caption{BER vs.\ $E_b/N_0$ }
+    \label{fig:BER_SNR}
 \end{figure}
 
-\begin{figure}[h]
-   \centering
-   \includegraphics[width=0.8\linewidth]{Images/huffman_encode.png}
-   \caption{BER vs.\ $E_b/N_0$ for the Huffman-encoded stream.}
-   \label{fig:huffman_BER}
-\end{figure}
+For both channels, QPSK outperforms 16-QAM by 4–6,\si{\decibel} at the $10^{-4}$ BER level, reflecting the larger minimum Euclidean distance of the QPSK constellation. The AWGN curves drop sharply, reaching BER \(<10^{-7}\) really soon. In contrast, Rayleigh fading introduces an error floor—BER falls much more slowly because deep fades occasionally drive the instantaneous SNR close to~0. Comparing Figure ~\ref{fig:ascii_BER} with Figure ~\ref{fig:huffman_BER} shows that the two sets of curves are similar, source coding should have \emph{no impact} on raw BER, because the channel sees the same random bit patterns. The  difference stems from the difference in length of the stream of bits.
 
-\subsubsection*{Interpretation}
-
-\begin{itemize}
-\item \textbf{Modulation order.}  
-      For both channels, QPSK outperforms 16-QAM by 4–6\,dB at the
-      \(10^{-4}\) BER level, reflecting the larger minimum Euclidean distance
-      of the QPSK constellation.
-
-\item \textbf{Channel type.}  
-      The AWGN curves drop sharply, reaching BER \(<10^{-7}\) with only
-      7–8\,dB of \(E_b/N_0\) (QPSK) or $\sim$11\,dB (16-QAM).
-      In contrast, Rayleigh fading introduces an error floor—BER falls much
-      more slowly because deep fades occasionally drive the instantaneous
-	  SNR close to~0.  At \(E_b/N_0=20\)\,dB Rayleigh QPSK is still above
-      \(10^{-4}\), confirming the need for time/frequency diversity or
-      stronger coding in mobile links.
-
-\item \textbf{ASCII vs.\ Huffman.}  
-      Comparing Fig.~\ref{fig:ascii_BER} with
-      Fig.~\ref{fig:huffman_BER} shows that the two sets of curves coincide
-      within Monte-Carlo scatter: source coding has \emph{no impact} on raw
-      BER, because the channel sees the same random bit patterns.
-      The performance gap that matters is in \emph{throughput}
-      (see Sec.~\ref{sec:throughput}): Huffman transmits the same text with
-      roughly half the number of bits, so for any target BER it doubles the
-      useful information rate.
-
-\item \textbf{Target design points.}  
-      To reach the lab’s reliability goal of BER $\le 10^{-5}$ without error
-      control coding:
-	  \begin{itemize}
-		\item AWGN~+~QPSK requires \(E_b/N_0\approx3.5\,\)dB;
-		\item AWGN~+~16-QAM requires \(\approx8\,\)dB;
-		\item Rayleigh~+~QPSK needs \(\gtrsim15\)\,dB and still shows an error
-			  floor;  
-		\item Rayleigh~+~16-QAM never meets the target within the tested range.
-	  \end{itemize}
-      These observations justify the use of forward-error-correction in
-      Phase~2 of the lab.
-\end{itemize}
 
