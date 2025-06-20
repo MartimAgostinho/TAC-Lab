@@ -190,9 +190,9 @@ polar codes are employed in 5g due better performance and simplicity
 
 \noindent
 but using \textbf{two source encoders:}
-\begin{enumerate}[label=(\roman*)]
-\item fixed–length \textbf{ASCII} (8\,bits/char) and  
-\item variable-length \textbf{Huffman} coding (average 4.09\,bits/char).
+\begin{enumerate}
+\item fixed--length \textbf{ASCII} (8\,bits/char)
+\item variable-length \textbf{Huffman} coding (average 4.09\,bits/char)
 \end{enumerate}
 In each case the resulting bit stream was transmitted over four channel–modulation combinations:
 \[
@@ -231,7 +231,7 @@ Monte-Carlo estimate of the BER.
       7–8\,dB of \(E_b/N_0\) (QPSK) or $\sim$11\,dB (16-QAM).
       In contrast, Rayleigh fading introduces an error floor—BER falls much
       more slowly because deep fades occasionally drive the instantaneous
-      SNR close to~0.  At \(E_b/N_0=20\) dB Rayleigh QPSK is still above
+	  SNR close to~0.  At \(E_b/N_0=20\)\,dB Rayleigh QPSK is still above
       \(10^{-4}\), confirming the need for time/frequency diversity or
       stronger coding in mobile links.
 
@@ -248,13 +248,13 @@ Monte-Carlo estimate of the BER.
 \item \textbf{Target design points.}  
       To reach the lab’s reliability goal of BER $\le 10^{-5}$ without error
       control coding:
-      \begin{itemize*}
-        \item AWGN~+~QPSK requires \(E_b/N_0\approx3.5\) dB;
-        \item AWGN~+~16-QAM requires \(\approx8\) dB;
-        \item Rayleigh~+~QPSK needs \(\gtrsim15\) dB and still shows an error
-              floor;  
-        \item Rayleigh~+~16-QAM never meets the target within the tested range.
-      \end{itemize*}
+	  \begin{itemize}
+		\item AWGN~+~QPSK requires \(E_b/N_0\approx3.5\,\)dB;
+		\item AWGN~+~16-QAM requires \(\approx8\,\)dB;
+		\item Rayleigh~+~QPSK needs \(\gtrsim15\)\,dB and still shows an error
+			  floor;  
+		\item Rayleigh~+~16-QAM never meets the target within the tested range.
+	  \end{itemize}
       These observations justify the use of forward-error-correction in
       Phase~2 of the lab.
 \end{itemize}
