@@ -18,7 +18,7 @@
 % 
 
 message = 'polar codes are employed in 5g due better performance and simplicity';
-BitStream = huffman_encode(message);
+BitStream = ascii_encode(message);
 
 configs = { ...
     {'AWGN', 'QPSK'}, ...
