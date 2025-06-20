@@ -21,7 +21,24 @@ The message, once padding has been applied, appears as follows:
 
 For the padded test sentence (71 symbols) the huffman alphabet is described by Table \ref{tab:huffCode}.
 
-\begin{table}[h]
+The coding has the following characteristics:
+
+\begin{itemize}
+  \item Bitstream Length $\lvert c\rvert = 288$ bits,
+  \item Average Code Length $\bar L = 3.9452$ bits/symbol,
+  \item Entropy $H(X)=3.9088$ bits/symbol
+\end{itemize}
+
+
+
+The \textbf{ASCII} encoding works as a benchmark, with each character using its standard 8-bit representation. No padding is required because every symbol uses an entire byte, making it always divisible by 4. 
+
+There are some important notes to take, as just said, the ASCII will be sending less characters per phrase, since there is no padding. With Huffman the average number of bits sent will be half the number bits comparing to ASCII, making it much more efficient but, this is for the specific case of sending this phrase. Concluding, although Huffman is twice as efficient for this case this relation is not maintained for larger alphabets and perhaps more importantly the huffman encoding requires knowing each character probability.
+
+\textcolor{red}{VER SE ]E VERDADE  In this context the huffman coding also works as a kind of error detection, since not all code can give a valid symbol.}
+
+
+\begin{table}[H]
 	\centering
 	\caption{Message Huffman Coding}
 	\begin{tabularx}{\textwidth}{>{\centering\arraybackslash}X >{\centering\arraybackslash}X >{\centering\arraybackslash}X >{\centering\arraybackslash}X}
@@ -73,21 +90,6 @@ For the padded test sentence (71 symbols) the huffman alphabet is described by T
 	\label{tab:huffCode}
 \end{table}
 
-The coding has the following characteristics:
-
-\begin{itemize}
-  \item Bitstream Length $\lvert c\rvert = 288$ bits,
-  \item Average Code Length $\bar L = 3.9452$ bits/symbol,
-  \item Entropy $H(X)=3.9088$ bits/symbol
-\end{itemize}
-
-
-
-The \textbf{ASCII} encoding works as a benchmark, with each character using its standard 8-bit representation. No padding is required because every symbol uses an entire byte, making it always divisible by 4. 
-
-There are some important notes to take, as just said, the ASCII will be sending less characters per phrase, since there is no padding. With Huffman the average number of bits sent will be half the number bits comparing to ASCII, making it much more efficient but, this is for the specific case of sending this phrase. Concluding, although Huffman is twice as efficient for this case this relation is not maintained for larger alphabets and perhaps more importantly the huffman encoding requires knowing each character probability.
-
-\textcolor{red}{VER SE ]E VERDADE  In this context the huffman coding also works as a kind of error detection, since not all code can give a valid symbol.}
 
 \subsection{Modulation}
 \label{ssec:modulations}
@@ -98,14 +100,8 @@ For this labwork, different mapping strategies were used, QPSK and 16-QAM.
 s_k = e^{j\frac{\pi}{2}\left(k+\tfrac12\right)}, \qquad k\in\{0,1,2,3\}.
 \]
 
-Figure \ref{fig:QPKS_Mapping}, shows the mapping in the cartesian plane.
+Figure \ref{fig:QPSK_Mapping}, shows the mapping in the cartesian plane.
 
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=0.6\textwidth]{Images/QPKS_Mapping.png}
-  \caption{QPSK mapping.}
-  \label{fig:QPKS_Mapping}
-\end{figure}
 
 The mapper groups the encoded bit stream into two-bit tuples $(b_1,b_0)$, converts each tuple to an integer index $(k =2b_1+b_0)$ and outputs \(s_k\).
 
@@ -114,14 +110,6 @@ The theoretical bit-error probability for QPSK in an AWGN channel is given by Eq
   P_b^{\text{QPSK}} = Q\left(\sqrt{2\frac{E_b}{N_0}}\right)\text{\cite{Work_TAC2025}}
   \label{eq:probErrQPSK}
 \end{equation}
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=0.6\textwidth]{Images/16-QAM_Constellation.png}
-	\caption{16-QAM Gray mapping.}
-	\label{fig:QAM_Mapping}
-\end{figure}
-
 
 For \textbf{QPSK}, demodulation is performed by measuring the phase angle of the received symbol and assigning it to one of four sectors:
 \[
@@ -139,10 +127,29 @@ The constellation points are labelled with \emph{Gray coding}, thus every neares
 
 Gray mapping was chosen because it minimises the bit‑error probability in an AWGN channel: a single symbol error (the most probable error event) flips only one bit, whereas natural or set‑partition labelling flips two or more bits on the same error~\cite{Work_TAC2025}.  
 
+\begin{figure}[h]
+
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics*[scale = 0.21]{Images/16-QAM_Constellation.png}
+        \caption{16-QAM Gray mapping.}
+        \label{fig:QAM_Mapping}
+    \end{subfigure}
+    %\hfill
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics*[scale = 0.21]{Images/QPKS_Mapping.png}
+        \caption{QPSK Mapping.}
+        \label{fig:QPSK_Mapping}
+    \end{subfigure}
+    
+    \caption{Modulations mapping }
+    \label{fig:mappings}
+\end{figure}
+
 The theoretical bit-error probability for 16-QAM in an AWGN channel can be approximated by Equation \ref{eq:probErr16QAM}.
 
 \begin{equation}
-  P_b^{\text{16QAM}} \approx \frac{3}{4}Q\left(\sqrt{\frac{4}{5}\frac{E_b}{N_0}}\right)\text{\cite{Work_TAC2025}}
+  P_b^{\text{16QAM}} \approx 3\cdot Q\left(\sqrt{\frac{4}{5}\frac{E_b}{N_0}}\right)\text{\cite{Work_TAC2025}}
   \label{eq:probErr16QAM}
 \end{equation}
 
