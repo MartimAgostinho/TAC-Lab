@@ -21,12 +21,15 @@ global qamdemod;
 global modQPSK;
 global demodQPSK;
 global s;
+global NSlot;
 
 % ---------------- common parameters ----------------------------
 EN  = (-5:2:22).';            % Eb/No grid   (column vector)
 NEN = numel(EN);
 en = 10 .^(EN/10);
 noiseVar = 1 ./ (1/3 * 4 .* en);
+
+NSlot = 1000;
 
 frmLen = 256;
 
@@ -64,6 +67,9 @@ BERblockConv    = zeros(NEN,4);     % Hamming + conv
 PretxBlock      = zeros(NEN,4);     % retrans prob (block)
 PretxBlockConv  = zeros(NEN,4);     % retrans prob (block+conv)
 
+PtxBlock = zeros(NEN, 4);
+PtxBlockConv = zeros(NEN, 4);
+
 qamMod = comm.GeneralQAMModulator(constellationQAM);
 qamdemod = comm.GeneralQAMDemodulator('Constellation',constellationQAM, ...
     'BitOutput', 1,'DecisionMethod','Hard decision');
@@ -93,10 +99,10 @@ for c = 1:4
     BERconv(:,c) = runConvBlock(CHANNEL, modulation, noiseVar);
 
     % ========= call your existing code block B (Hamming) ==========
-    [BERblock(:,c), PretxBlock(:,c)] = runBlock(CHANNEL, modulation, noiseVar);
+    [BERblock(:,c), PretxBlock(:,c), PtxBlock(:,c)] = runBlock(CHANNEL, modulation, noiseVar);
 
     % ========= call your existing code block C (Block + Conv) =====
-    [BERblockConv(:,c), PretxBlockConv(:,c)] = ...
+    [BERblockConv(:,c), PretxBlockConv(:,c),PtxBlockConv(:,c)] = ...
                                 runBlockConv(CHANNEL, modulation, noiseVar);
 end
 
@@ -108,6 +114,7 @@ style = {'b-*','b--o','g-s','g:.'};
 for c = 1:4
     semilogy( EN , BERconv(:,c) , style{c} , 'LineWidth',1.4 );
 end
+set(gca, 'YScale', 'log');
 xlabel('E_b/N_0  (dB)'); ylabel('BER');
 title('BER – convolutional code only');
 legend(labels,'Location','southwest');
@@ -123,6 +130,7 @@ end
 for c = 1:4
     semilogy( EN , PretxBlock(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
 end
+set(gca, 'YScale', 'log');
 xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
 title('BER and re-tx probability – Hamming block');
 legend([labels , strcat({'P_{re-}'},labels)],'Location','southwest');
@@ -138,6 +146,7 @@ end
 for c = 1:4
     semilogy( EN , PretxBlockConv(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
 end
+set(gca, 'YScale', 'log');
 xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
 title('BER and re-tx probability – block + convolutional');
 legend([labels , strcat({'P_{re-}'},labels)],'Location','southwest');
@@ -160,6 +169,7 @@ function BER = runConvBlock(CHANNEL,modulation,noiseVar)
     global modQPSK;
     global demodQPSK;
     global s;
+    global NSlot;
     hError = comm.ErrorRate;
     NErr1=zeros(NEN,1);
     NErr2=zeros(NEN,1);
@@ -173,7 +183,7 @@ function BER = runConvBlock(CHANNEL,modulation,noiseVar)
         end
         reset(hError);
         reset(hconvde);
-        for frmIdx = 1:10000
+        for frmIdx = 1:NSlot
             data = randi(s, [0 1], frmLen, 1);
 
             encodedData = step(hconv, data);
@@ -231,7 +241,7 @@ function BER = runConvBlock(CHANNEL,modulation,noiseVar)
     %error('runConvBlock not yet implemented');
 end
 
-function [BERBlock,PretxBlock] = runBlock(CHANNEL,modulation,noiseVar)
+function [BERBlock,PretxBlock, PtxBlock] = runBlock(CHANNEL,modulation,noiseVar)
     % ---- paste your original Hamming-only loop here ----
     % Pretx must be computed with block length = 11
     global NEN;
@@ -247,6 +257,8 @@ function [BERBlock,PretxBlock] = runBlock(CHANNEL,modulation,noiseVar)
     global modQPSK;
     global demodQPSK;
     global s;
+    global NSlot;
+    NErrBlock=zeros(NEN,1);
     NErr1Block=zeros(NEN,1);
     NErr2Block=zeros(NEN,1);
     NErr3Block=zeros(NEN,1);
@@ -260,7 +272,7 @@ function [BERBlock,PretxBlock] = runBlock(CHANNEL,modulation,noiseVar)
         end
         reset(hError);
         reset(hconvde);
-        for frmIdx = 1:10000
+        for frmIdx = 1:NSlot
             dataBlock = randi(s, [0 1], frmLen, 1);
             dataPadded = [dataBlock; zeros(n_excess,1)];
             dataMatrix = reshape(dataPadded, blockSize, []).';
@@ -309,7 +321,11 @@ function [BERBlock,PretxBlock] = runBlock(CHANNEL,modulation,noiseVar)
             % Convert received signal to log-likelihood ratios for decoding
             deinterSignalBlock = deintrlv(receivedSignalBlock, intrlvrIndices_block);
             receivedBitsBlock  = decode(deinterSignalBlock,wordSize,blockSize,'hamming/binary');
-
+            
+            dataMatrixBlockdec = reshape(receivedBitsBlock, blockSize, []).';
+            aux = any(dataMatrix ~= dataMatrixBlockdec, 2);
+            
+            NErrBlock(nEN,1)=NErrBlock(nEN,1)+sum(aux);
             errorStatsBlock = step(hError, dataPadded, receivedBitsBlock);
 
 
@@ -319,6 +335,7 @@ function [BERBlock,PretxBlock] = runBlock(CHANNEL,modulation,noiseVar)
         NErr3Block(nEN,1)=errorStatsBlock(3);
     end
     
+    PtxBlock = NErrBlock/nBlocks/NSlot;
     BERBlock=NErr1Block;
     NerrosBlock=NErr2Block;
     bitsTotalBlock=NErr3Block;
@@ -330,7 +347,7 @@ function [BERBlock,PretxBlock] = runBlock(CHANNEL,modulation,noiseVar)
     %error('runBlock not yet implemented');
 end
 
-function [BERBlockConv,PretxBlockConv] = runBlockConv(CHANNEL,modulation,noiseVar)
+function [BERBlockConv,PretxBlockConv, PtxBlockConv] = runBlockConv(CHANNEL,modulation,noiseVar)
     % ---- paste your original block+conv loop here ----
     % Pretx computed with block length = 11
     global NEN;
@@ -347,7 +364,9 @@ function [BERBlockConv,PretxBlockConv] = runBlockConv(CHANNEL,modulation,noiseVa
     global modQPSK;
     global demodQPSK;
     global s;
+    global NSlot;
     hError = comm.ErrorRate;
+    NErrBlockConv=zeros(NEN,1);
     NErr1BlockConv=zeros(NEN,1);
     NErr2BlockConv=zeros(NEN,1);
     NErr3BlockConv=zeros(NEN,1);
@@ -360,7 +379,7 @@ function [BERBlockConv,PretxBlockConv] = runBlockConv(CHANNEL,modulation,noiseVa
         end
         reset(hError);
         reset(hconvde);
-        for frmIdx = 1:10000
+        for frmIdx = 1:NSlot
             dataBlockConv = randi(s, [0 1], frmLen, 1);
             dataPaddedConv = [dataBlockConv; zeros(n_excess,1)];
             dataMatrixConv = reshape(dataPaddedConv, blockSize, []).';
@@ -412,7 +431,12 @@ function [BERBlockConv,PretxBlockConv] = runBlockConv(CHANNEL,modulation,noiseVa
             deinterSignalBlockConv = deintrlv(receivedSignalBlockConv, intrlvrIndices_blockconv);
             receivedBitsBlockConv  = step(hconvde, deinterSignalBlockConv);
             receivedBitsBlockConvFinal  = decode(receivedBitsBlockConv,wordSize,blockSize,'hamming/binary');
-
+            
+            dataMatrixBlockConvdec = reshape(receivedBitsBlockConvFinal, blockSize, []).';
+            auxbc = any(dataMatrixConv ~= dataMatrixBlockConvdec, 2);
+            
+            NErrBlockConv(nEN,1)=NErrBlockConv(nEN,1)+sum(auxbc);
+            
             errorStatsBlockConv = step(hError, dataPaddedConv, receivedBitsBlockConvFinal);
 
 
@@ -422,7 +446,7 @@ function [BERBlockConv,PretxBlockConv] = runBlockConv(CHANNEL,modulation,noiseVa
         NErr3BlockConv(nEN,1)=errorStatsBlockConv(3);
     end
 
-
+    PtxBlockConv = NErrBlockConv/nBlocks/NSlot;
     BERBlockConv=NErr1BlockConv;
     NerrosBlockConv=NErr2BlockConv;
     bitsTotalBlockConv=NErr3BlockConv;
