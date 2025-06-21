@@ -1,4 +1,4 @@
-function [BER_arr,SNR_arr] = channel(BitStream,CHANNEL,modulation)
+function [BER_arr,SNR_arr] = channel(BitStream,CHANNEL,modulation,ErrorDetection)
 
 
     if nargin == 0          % self-test section — runs only when no inputs

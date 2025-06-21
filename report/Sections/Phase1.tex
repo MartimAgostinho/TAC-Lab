@@ -1,10 +1,10 @@
-\section{Phase 1}
+\section{Phase I}
 
 \subsection{Encoder}
 
 \label{sec:encoder}
 
-This section details the two source-coding strategies \emph{Huffman coding} and a plain \emph{ASCII}. All scripts were written in \textsc{Matlab}.
+This section details the two source-coding strategies \emph{Huffman coding} and a plain \emph{ASCII}. All scripts were written in \textsc{Matlab}. Note that Figure \ref{fig:RxTx} shows the complete system, were as in this section no interleaver nor Error control was applied.
 
 \label{ssec:huffman}
 
@@ -213,5 +213,5 @@ Although previously the goal was set to send 1 million bits, but with this numbe
 \end{figure}
 
 For both channels, QPSK outperforms 16-QAM by 4–6,\si{\decibel} at the $10^{-4}$ BER level, reflecting the larger minimum Euclidean distance of the QPSK constellation. The AWGN curves drop sharply, reaching BER \(<10^{-7}\) really soon. In contrast, Rayleigh fading introduces an error floor—BER falls much more slowly because deep fades occasionally drive the instantaneous SNR close to~0. Comparing Figure ~\ref{fig:ascii_BER} with Figure ~\ref{fig:huffman_BER} shows that the two sets of curves are similar, source coding should have \emph{no impact} on raw BER, because the channel sees the same random bit patterns. The  difference stems from the difference in length of the stream of bits.
-
+When comparing 16-QAM and QPSK performances it is important to remember that 16-QAM transmits 2 times the amount of bits per symbol, when transmitting the same amount of symbols per second, this would be double the bit-rate. Hence when comparing both modulation with ARQ, the effective bit-rate will be highly dependent on BER. 
 
