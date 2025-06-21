@@ -110,7 +110,7 @@ PbAWGN=q_x(sqrt(2*L*en));
 
 Pb=NErr/NSlot/N/2;
 
-%figure;
+figure();
 semilogy(EN,Pb,'k-*',EN,PbAWGN,'b-',EN,Pb_tr,'b*:')
 xlabel('E_b/N_0(dB)'),ylabel('BER')
 axis([0 20 1e-4 1])
