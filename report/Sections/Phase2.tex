@@ -1,20 +1,8 @@
-
-\subsection{Convolution Coding}
-
-Criar o gerador dos codigos, codificar e depois innterleav , modular enviar, desmodular de interleaver decode, calcular erros.
-
-explicar codigo 
-
-Obter taxas de erro 
-
-Valor teorico das probabilidades de retransmissao e de erro plot
-
-\subsection{Block}
+\section{Phase II}
+\label{sec:phase2}
 
 
 
-Criar matriz geradora de hamming dar print ?, fazer a operacao da merda ver teoria.
-Needs padding 
 
 \subsection{Resultados}
 
@@ -26,9 +14,6 @@ tabela ErrorRate | Numero de Erros |
 
 
 
-%======================================================================
-\section{Phase II}
-\label{sec:phase2}
 
 Figure~\ref{fig:RxTx} shows the complete Block Diagram. For this second phase 2 blocks are added, Interleaver and error control. 
 
@@ -49,7 +34,7 @@ Dar plot aos valores teoricos e mostrar as equacoes.
 
 \subsubsection{Hamming}
 
-The other block-coding stage employed is the binary Hamming $(15,11)$ code.It maps every $k=11$ information bits into an $n=15-bit$ codeword, adding four parity bits according to the generator matrix, The code can correct any single-bit error and detect (but not correct) any double-bit error in each 15-bit word.
+The other block-coding stage employed is the binary Hamming $(15,11)$ code. It maps every $k=11$ information bits into an $n=15-bit$ codeword, adding four parity bits according to the generator matrix, The code can correct any single-bit error and detect (but not correct) any double-bit error in each 15-bit word.
 
 \begin{comment}
 
@@ -120,19 +105,14 @@ The other block-coding stage employed is the binary Hamming $(15,11)$ code.It ma
 \subsubsection{Theoretical re-transmission probability}
 
 For a $(15,11)$ Hamming code an ARQ is triggered if the decoder
-detects \(\ge 2\) bit errors in the codeword.  The probability is
+detects \(\ge 2\) bit errors in the codeword. The probability is Equation \ref{eq:Pret}.
 
-Dizer as 3 opcoes, nada acontece, corrige, deteta so, erro nao detetado
+\begin{equation}
+      P_{ret} \approx \begin{pmatrix}n \\ 1\end{pmatrix}p(1-p)^{n-1} \text{\cite{Work_TAC2025}}
+      \label{eq:Pret}
+\end{equation}
 
-\[
-P_{\text{re,\,theo}}(P_b) =
-1 - \bigl(1-P_b\bigr)^{15}
-    \;-\;
-    15\,P_b\bigl(1-P_b\bigr)^{14},
-\]
-
-where \(P_b\) is the uncoded bit-error rate at the output of the
-demapper (TAC Topics, §10.1, Eq.\,10.6).
+This yields Figure \ref{fig:Pret_Teo}.
 
 %--------------------------------------------------------------------
 \subsection{Simulation results}
