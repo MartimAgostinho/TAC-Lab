@@ -22,6 +22,10 @@ global modQPSK;
 global demodQPSK;
 global s;
 global NSlot;
+global tail;
+global tailqam;
+global data;
+global tailblock;
 
 % ---------------- common parameters ----------------------------
 EN  = (-5:2:22).';            % Eb/No grid   (column vector)
@@ -29,9 +33,15 @@ NEN = numel(EN);
 en = 10 .^(EN/10);
 noiseVar = 1 ./ (1/3 * 4 .* en);
 
-NSlot = 1000;
+NSlot = 100;
 
-frmLen = 256;
+message = 'polar codes are employed in 5g due better performance and simplicity';
+
+[datahuff, dict, messagepadd] = huffman_encode(message);
+
+data = datahuff';
+
+frmLen = length(data);
 
 s = RandStream('mt19937ar', 'Seed', 11);
 
@@ -39,12 +49,18 @@ blockSize = 11;
 wordSize = 15;
 nBlocks = ceil(frmLen / blockSize);
 n_excess = nBlocks * blockSize -frmLen ;
-intrlvrIndices_block = randperm(nBlocks * wordSize);
+intrlvrIndices_block = randperm(nBlocks * wordSize +3);
 
-intrlvrIndices_blockconv = randperm(3*nBlocks * wordSize);
+intrlvrIndices_blockconv = randperm(3*(nBlocks * wordSize + 6 + 3));
 
-intrlvrIndices = randperm(frmLen*3);
+intrlvrIndices = randperm((frmLen + 6)*3);
 trellis = poly2trellis(7,[165 171 133]);
+
+tail = zeros(6,1);
+
+tailqam = zeros(ceil((frmLen + 6)*3/4)*4 - (frmLen + 6)*3, 1);
+
+tailblock = zeros(3, 1);
 
 combinations = dec2bin(0:15) - '0';
 bits = reshape(combinations.', 1, []);
@@ -56,7 +72,7 @@ constellationQPSK = modul8(bits,'QPSK')';
 
 
 hconv = comm.ConvolutionalEncoder('TrellisStructure', trellis);
-hconvde = comm.ViterbiDecoder('TrellisStructure', trellis,'InputFormat', 'Hard', 'TerminationMethod','Truncated');
+hconvde = comm.ViterbiDecoder('TrellisStructure', trellis,'InputFormat', 'Hard', 'TerminationMethod','Terminated','TracebackDepth', 30);
 hError = comm.ErrorRate;
 
 % store results here:   rows = SNR points, cols = four cases
@@ -66,6 +82,9 @@ BERblockConv    = zeros(NEN,4);     % Hamming + conv
 
 PretxBlock      = zeros(NEN,4);     % retrans prob (block)
 PretxBlockConv  = zeros(NEN,4);     % retrans prob (block+conv)
+
+PtxBlock = zeros(NEN, 4);
+PtxBlockConv = zeros(NEN, 4);
 
 qamMod = comm.GeneralQAMModulator(constellationQAM);
 qamdemod = comm.GeneralQAMDemodulator('Constellation',constellationQAM, ...
@@ -99,7 +118,7 @@ for c = 1:4
     [BERblock(:,c), PretxBlock(:,c), PtxBlock(:,c)] = runBlock(CHANNEL, modulation, noiseVar);
 
     % ========= call your existing code block C (Block + Conv) =====
-    [BERblockConv(:,c), PretxBlockConv(:,c)] = ...
+    [BERblockConv(:,c), PretxBlockConv(:,c),PtxBlockConv(:,c)] = ...
                                 runBlockConv(CHANNEL, modulation, noiseVar);
 end
 
@@ -167,6 +186,9 @@ function BER = runConvBlock(CHANNEL,modulation,noiseVar)
     global demodQPSK;
     global s;
     global NSlot;
+    global tail;
+    global tailqam;
+    global data;
     hError = comm.ErrorRate;
     NErr1=zeros(NEN,1);
     NErr2=zeros(NEN,1);
@@ -174,19 +196,18 @@ function BER = runConvBlock(CHANNEL,modulation,noiseVar)
     for nEN=1:NEN
         hChanAWGN  = comm.AWGNChannel('NoiseMethod', 'Variance', 'Variance', noiseVar(nEN));
         if(strcmp(modulation, '16QAM') == 1)
-            h = (randn(frmLen * 3 / 4, 1) + 1j * randn(frmLen * 3 / 4, 1)) / sqrt(2);
+            h = (randn(ceil((frmLen+6) * 3 / 4), 1) + 1j * randn(ceil((frmLen+6) * 3 / 4), 1)) / sqrt(2);
         elseif(strcmp(modulation, 'QPSK') == 1)
-            h = (randn(frmLen * 3 / 2, 1) + 1j * randn(frmLen * 3 / 2, 1)) / sqrt(2);
+            h = (randn((frmLen+6) * 3 / 2, 1) + 1j * randn((frmLen+6) * 3 / 2, 1)) / sqrt(2);
         end
         reset(hError);
         reset(hconvde);
         for frmIdx = 1:NSlot
-            data = randi(s, [0 1], frmLen, 1);
-
-            encodedData = step(hconv, data);
+            encodedData = step(hconv, [data; tail]);
             interData = intrlv(encodedData, intrlvrIndices);
             if(strcmp(modulation, '16QAM') == 1)
-                encodedDataMatrix = reshape(interData, 4, []).';        % Cada linha: 4 bits
+                
+                encodedDataMatrix = reshape([interData;tailqam], 4, []).';        % Cada linha: 4 bits
                 symbols = bi2de(encodedDataMatrix, 'left-msb');
                 %in a rayleigh channel it is necessary to interleave bits before modulation
 
@@ -220,8 +241,9 @@ function BER = runConvBlock(CHANNEL,modulation,noiseVar)
             
 
             % Convert received signal to log-likelihood ratios for decoding
-            deinterSignal = deintrlv(receivedSignal, intrlvrIndices);
-            receivedBits  = step(hconvde, deinterSignal);
+            deinterSignal = deintrlv(receivedSignal(1:length(interData)), intrlvrIndices);
+            decodedBits  = step(hconvde, deinterSignal);
+            receivedBits  = decodedBits(1:length(data));
 
             errorStats = step(hError, data, receivedBits);
 
@@ -242,7 +264,6 @@ function [BERBlock,PretxBlock, PtxBlock] = runBlock(CHANNEL,modulation,noiseVar)
     % ---- paste your original Hamming-only loop here ----
     % Pretx must be computed with block length = 11
     global NEN;
-    global frmLen;
     global nBlocks;
     global intrlvrIndices_block;
     global blockSize;
@@ -253,8 +274,9 @@ function [BERBlock,PretxBlock, PtxBlock] = runBlock(CHANNEL,modulation,noiseVar)
     global qamdemod;
     global modQPSK;
     global demodQPSK;
-    global s;
     global NSlot;
+    global data;
+    global tailblock;
     NErrBlock=zeros(NEN,1);
     NErr1Block=zeros(NEN,1);
     NErr2Block=zeros(NEN,1);
@@ -263,15 +285,14 @@ function [BERBlock,PretxBlock, PtxBlock] = runBlock(CHANNEL,modulation,noiseVar)
     for nEN=1:NEN
         hChanAWGN  = comm.AWGNChannel('NoiseMethod', 'Variance', 'Variance', noiseVar(nEN));
         if(strcmp(modulation, '16QAM') == 1)
-            hBlock = (randn(nBlocks*15/4, 1) + 1j * randn(nBlocks*15/4, 1)) / sqrt(2);
+            hBlock = (randn(ceil((nBlocks*15 +3)/4), 1) + 1j * randn(ceil((nBlocks*15 +3)/4), 1)) / sqrt(2);
         elseif(strcmp(modulation, 'QPSK') == 1)
-            hBlock = (randn(nBlocks*15/2, 1) + 1j * randn(nBlocks*15/2, 1)) / sqrt(2);
+            hBlock = (randn(ceil((nBlocks*15 +3)/2), 1) + 1j * randn(ceil((nBlocks*15 +3)/2) +1, 1)) / sqrt(2);
         end
         reset(hError);
         reset(hconvde);
         for frmIdx = 1:NSlot
-            dataBlock = randi(s, [0 1], frmLen, 1);
-            dataPadded = [dataBlock; zeros(n_excess,1)];
+            dataPadded = [data; zeros(n_excess,1)];
             dataMatrix = reshape(dataPadded, blockSize, []).';
             codedMatrix = zeros(nBlocks, wordSize);
             for i = 1:nBlocks
@@ -280,8 +301,10 @@ function [BERBlock,PretxBlock, PtxBlock] = runBlock(CHANNEL,modulation,noiseVar)
 
             % Vetor codificado completo
             encodedDataBlock = reshape(codedMatrix.', [], 1);
+            
+            dataMatrixCode = reshape(encodedDataBlock, wordSize, []).';
 
-            interDataBlock = intrlv(encodedDataBlock, intrlvrIndices_block);
+            interDataBlock = intrlv([encodedDataBlock;tailblock], intrlvrIndices_block);
 
             if(strcmp(modulation, '16QAM') == 1)
                 encodedDataMatrixBlock = reshape(interDataBlock, 4, []).';        % Cada linha: 4 bits
@@ -317,10 +340,12 @@ function [BERBlock,PretxBlock, PtxBlock] = runBlock(CHANNEL,modulation,noiseVar)
             end        
             % Convert received signal to log-likelihood ratios for decoding
             deinterSignalBlock = deintrlv(receivedSignalBlock, intrlvrIndices_block);
-            receivedBitsBlock  = decode(deinterSignalBlock,wordSize,blockSize,'hamming/binary');
+            receivedBitsBlock  = decode(deinterSignalBlock(1:length(encodedDataBlock)),wordSize,blockSize,'hamming/binary');
             
-            dataMatrixBlockdec = reshape(receivedBitsBlock, blockSize, []).';
-            aux = any(dataMatrix ~= dataMatrixBlockdec, 2);
+            dataMatrixBlockdec = reshape(deinterSignalBlock(1:length(encodedDataBlock)), wordSize, []).';
+            errCountsBlock = sum(dataMatrixCode ~= dataMatrixBlockdec, 2);
+            
+            aux = (errCountsBlock == 2) | (errCountsBlock == 3);
             
             NErrBlock(nEN,1)=NErrBlock(nEN,1)+sum(aux);
             errorStatsBlock = step(hError, dataPadded, receivedBitsBlock);
@@ -332,7 +357,7 @@ function [BERBlock,PretxBlock, PtxBlock] = runBlock(CHANNEL,modulation,noiseVar)
         NErr3Block(nEN,1)=errorStatsBlock(3);
     end
     
-    PtxBlock = NErrBlock/nBlocks/NSlot
+    PtxBlock = NErrBlock/nBlocks/NSlot;
     BERBlock=NErr1Block;
     NerrosBlock=NErr2Block;
     bitsTotalBlock=NErr3Block;
@@ -348,7 +373,6 @@ function [BERBlockConv,PretxBlockConv, PtxBlockConv] = runBlockConv(CHANNEL,modu
     % ---- paste your original block+conv loop here ----
     % Pretx computed with block length = 11
     global NEN;
-    global frmLen;
     global nBlocks;
     global intrlvrIndices_blockconv;
     global blockSize;
@@ -360,8 +384,11 @@ function [BERBlockConv,PretxBlockConv, PtxBlockConv] = runBlockConv(CHANNEL,modu
     global qamdemod;
     global modQPSK;
     global demodQPSK;
-    global s;
     global NSlot;
+    global tail;
+    global tailqam;
+    global data;
+    global tailblock;
     hError = comm.ErrorRate;
     NErrBlockConv=zeros(NEN,1);
     NErr1BlockConv=zeros(NEN,1);
@@ -370,15 +397,14 @@ function [BERBlockConv,PretxBlockConv, PtxBlockConv] = runBlockConv(CHANNEL,modu
     for nEN=1:NEN
         hChanAWGN  = comm.AWGNChannel('NoiseMethod', 'Variance', 'Variance', noiseVar(nEN));
         if(strcmp(modulation, '16QAM') == 1)
-            hBlockConv = (randn(nBlocks*15*3/4, 1) + 1j * randn(nBlocks*15*3/4, 1)) / sqrt(2);
+            hBlockConv = (randn(ceil((nBlocks*15+6 +3)*3/4), 1) + 1j * randn(ceil((nBlocks*15+6)*3/4), 1)) / sqrt(2);
         elseif(strcmp(modulation, 'QPSK') == 1)
-            hBlockConv = (randn(nBlocks*15*3/2, 1) + 1j * randn(nBlocks*15*3/2, 1)) / sqrt(2);
+            hBlockConv = (randn(ceil((nBlocks*15+6 +3)*3/2), 1) + 1j * randn(ceil((nBlocks*15+6)*3/2), 1)) / sqrt(2);
         end
         reset(hError);
         reset(hconvde);
         for frmIdx = 1:NSlot
-            dataBlockConv = randi(s, [0 1], frmLen, 1);
-            dataPaddedConv = [dataBlockConv; zeros(n_excess,1)];
+            dataPaddedConv = [data; zeros(n_excess,1)];
             dataMatrixConv = reshape(dataPaddedConv, blockSize, []).';
             codedMatrixConv = zeros(nBlocks, wordSize);
             for i = 1:nBlocks
@@ -387,13 +413,15 @@ function [BERBlockConv,PretxBlockConv, PtxBlockConv] = runBlockConv(CHANNEL,modu
 
             % Vetor codificado completo
             encodedDataBlockConv = reshape(codedMatrixConv.', [], 1);
-
+            
+            dataMatrixConvCode = reshape(encodedDataBlockConv, wordSize, []).';
+            
+            tailblockconv = [tailblock;tail];
             %conv
-            encodedDataBlockConvFinal = step(hconv, encodedDataBlockConv);
-
+            encodedDataBlockConvFinal = step(hconv, [encodedDataBlockConv;tailblockconv]);
             interDataBlockConv = intrlv(encodedDataBlockConvFinal, intrlvrIndices_blockconv);
             if(strcmp(modulation, '16QAM') == 1)
-                encodedDataMatrixBlockConv = reshape(interDataBlockConv, 4, []).';        % Cada linha: 4 bits
+                encodedDataMatrixBlockConv = reshape([interDataBlockConv;tailqam], 4, []).';        % Cada linha: 4 bits
                 symbolsBlockConv = bi2de(encodedDataMatrixBlockConv, 'left-msb');
                 %in a rayleigh channel it is necessary to interleave bits before modulation
 
@@ -412,6 +440,8 @@ function [BERBlockConv,PretxBlockConv, PtxBlockConv] = runBlockConv(CHANNEL,modu
                 channelSignalBlockConv = step(hChanAWGN, modSignalBlockConv);
                 eqSignalBlockConv = channelSignalBlockConv;
             elseif(strcmp(CHANNEL, 'RAYL') == 1)
+                length(hBlockConv)
+                length(modSignalBlockConv)
                 channelSignalRaylBlockConv = modSignalBlockConv .* hBlockConv;
                 channelSignalBlockConv = step(hChanAWGN, channelSignalRaylBlockConv);
                 eqSignalBlockConv = channelSignalBlockConv ./ hBlockConv;
@@ -425,14 +455,17 @@ function [BERBlockConv,PretxBlockConv, PtxBlockConv] = runBlockConv(CHANNEL,modu
                 receivedSignalBlockConv = step(demodQPSK, eqSignalBlockConv);
             end   
             % Convert received signal to log-likelihood ratios for decoding
-            deinterSignalBlockConv = deintrlv(receivedSignalBlockConv, intrlvrIndices_blockconv);
-            receivedBitsBlockConv  = step(hconvde, deinterSignalBlockConv);
-            receivedBitsBlockConvFinal  = decode(receivedBitsBlockConv,wordSize,blockSize,'hamming/binary');
+            deinterSignalBlockConv = deintrlv(receivedSignalBlockConv(1:length(interDataBlockConv)), intrlvrIndices_blockconv);
+            decodedBitsBlockConv  = step(hconvde, deinterSignalBlockConv);
+            receivedBitsBlockConv  = decodedBitsBlockConv(1:length(encodedDataBlockConv)+3);
+            receivedBitsBlockConvFinal  = decode(receivedBitsBlockConv(1:length(encodedDataBlockConv)),wordSize,blockSize,'hamming/binary');
             
-            dataMatrixBlockConvdec = reshape(receivedBitsBlockConvFinal, blockSize, []).';
-            aux = any(dataMatrix ~= dataMatrixBlockdec, 2);
+            dataMatrixBlockConvdec = reshape(receivedBitsBlockConv(1:length(encodedDataBlockConv)), wordSize, []).';
+            errCountsBC = sum(dataMatrixConvCode ~= dataMatrixBlockConvdec, 2);
             
-            NErrBlock(nEN,1)=NErrBlock(nEN,1)+sum(aux);
+            auxbc = (errCountsBC == 2) | (errCountsBC == 3);
+            
+            NErrBlockConv(nEN,1)=NErrBlockConv(nEN,1)+sum(auxbc);
             
             errorStatsBlockConv = step(hError, dataPaddedConv, receivedBitsBlockConvFinal);
 
@@ -443,7 +476,7 @@ function [BERBlockConv,PretxBlockConv, PtxBlockConv] = runBlockConv(CHANNEL,modu
         NErr3BlockConv(nEN,1)=errorStatsBlockConv(3);
     end
 
-
+    PtxBlockConv = NErrBlockConv/nBlocks/NSlot;
     BERBlockConv=NErr1BlockConv;
     NerrosBlockConv=NErr2BlockConv;
     bitsTotalBlockConv=NErr3BlockConv;

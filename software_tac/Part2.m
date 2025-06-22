@@ -9,7 +9,11 @@ NErr=zeros(NEN,1);
 s = RandStream('mt19937ar', 'Seed', 11);
 noiseVar = 1 ./ (1/3 * 4 .* en);
 
-frmLen = 256;
+message = 'polar codes are employed in 5g due better performance and simplicity';
+
+[data, dict, messagepadd] = huffman_encode(message);
+
+frmLen = lenght(data);
 
 blockSize = 11;
 wordSize = 15;
@@ -24,155 +28,162 @@ trellis = poly2trellis(7,[165 171 133]);
 
 constellation = reshape([-3 -1 1 3] + 1j*[3 1 -1 -3].', [], 1);
 
+tail = zeros(7-1,1);  
 
 hconv = comm.ConvolutionalEncoder('TrellisStructure', trellis);
 qamMod = comm.GeneralQAMModulator(constellation');
 qamdemod = comm.GeneralQAMDemodulator('Constellation',constellation', ...
     'BitOutput', 1,'DecisionMethod','Hard decision');
-hconvde = comm.ViterbiDecoder('TrellisStructure', trellis,'InputFormat', 'Hard', 'TerminationMethod','Truncated');
+hconvde = comm.ViterbiDecoder('TrellisStructure', trellis,'InputFormat', 'Hard', 'TerminationMethod','Terminated','TracebackDepth', 30);
 hError = comm.ErrorRate;
 
 
-% % -------------- Conv -------------
-% for nEN=1:NEN
-%     hChanAWGN  = comm.AWGNChannel('NoiseMethod', 'Variance', 'Variance', noiseVar(nEN));
-%     %hChanRAYL  = comm.RayleighChannel('PathDelays',0, 'AveragePathGains',0,'NormalizePathGains',1, 'MaximumDopplerShift',0);
-%     % Canal Rayleigh plano (flat-fading) gerado manualmente
-%     h = (randn(192, 1) + 1j * randn(192, 1)) / sqrt(2);
-%     
-%     reset(hError);
-%     reset(hconvde);
-%     for frmIdx = 1:10000
-%         data = randi(s, [0 1], frmLen, 1);
-%         
-%         encodedData = step(hconv, data);
-%         interData = intrlv(encodedData, intrlvrIndices);
-%         encodedDataMatrix = reshape(interData, 4, []).';        % Cada linha: 4 bits
-%         symbols = bi2de(encodedDataMatrix, 'left-msb');
-%         %in a rayleigh channel it is necessary to interleave bits before modulation
-% 
-%         modSignal = step(qamMod, symbols);
-%         
-%         channelSignalRayl = modSignal .* h;
-%         channelSignal = step(hChanAWGN, channelSignalRayl);
-% 
-%         %in a rayleigh channel it is necessary to de-interleave demodulated bits before
-% 
-%         %decoding
-%         eqSignal = channelSignal ./ h;
-%         receivedSignal = step(qamdemod, eqSignal);
-%         
-%         % Convert received signal to log-likelihood ratios for decoding
-%         deinterSignal = deintrlv(receivedSignal, intrlvrIndices);
-%         receivedBits  = step(hconvde, deinterSignal);
-% 
-%         errorStats = step(hError, data, receivedBits);
-% 
-% 
-%     end
-%     NErr1(nEN,1)=errorStats(1);
-%     NErr2(nEN,1)=errorStats(2);
-%     NErr3(nEN,1)=errorStats(3);
-% end
-% 
-% BER=NErr1;
-% Nerros=NErr2;
-% bitsTotal=NErr3;
-% 
-% fprintf('\n\n\n ######## Conv Codes ######### \n\n\n')
-% for nEN=1:NEN
-%     
-%     fprintf('\n\n----- SNR %d ----\n\n', EN(nEN))
-%     fprintf('Error rate = %f\nNumber of errors = %d\nTotal bits = %d\n', ...
-%     BER(nEN), Nerros(nEN), bitsTotal(nEN)) 
-%     
-% end
-% 
-% figure()
-% semilogy(EN,BER,'k-*')
-% xlabel('E_b/N_0(dB)'),ylabel('BER')
-% axis([-5 20 1e-7 1])
-% 
-% % -------------- Blocks -------------
-
+% -------------- Conv -------------
 for nEN=1:NEN
     hChanAWGN  = comm.AWGNChannel('NoiseMethod', 'Variance', 'Variance', noiseVar(nEN));
     %hChanRAYL  = comm.RayleighChannel('PathDelays',0, 'AveragePathGains',0,'NormalizePathGains',1, 'MaximumDopplerShift',0);
     % Canal Rayleigh plano (flat-fading) gerado manualmente
-    hBlock = (randn(90, 1) + 1j * randn(90, 1)) / sqrt(2);
+    h = (randn(192, 1) + 1j * randn(192, 1)) / sqrt(2);
     
     reset(hError);
-    reset(hconvde);
-    for frmIdx = 1:10000
-        dataBlock = randi(s, [0 1], frmLen, 1);
-        dataPadded = [dataBlock; zeros(n_excess,1)];
-        dataMatrix = reshape(dataPadded, blockSize, []).';
-        codedMatrix = zeros(nBlocks, wordSize);
-        for i = 1:nBlocks
-            codedMatrix(i, :) = encode(dataMatrix(i, :)', wordSize, blockSize, 'hamming/binary')';
-        end
-
-        % Vetor codificado completo
-        encodedDataBlock = reshape(codedMatrix.', [], 1);
+    for frmIdx = 1:100
+        reset(hconvde);
+        data = randi(s, [0 1], frmLen, 1);
         
-        interDataBlock = intrlv(encodedDataBlock, intrlvrIndices_block);
-        encodedDataMatrixBlock = reshape(interDataBlock, 4, []).';        % Cada linha: 4 bits
-        symbolsBlock = bi2de(encodedDataMatrixBlock, 'left-msb');
+        encodedData = step(hconv, [data; tail]);
+        %interData = intrlv(encodedData, intrlvrIndices);
+        encodedDataMatrix = reshape(interData, 4, []).';        % Cada linha: 4 bits
+        symbols = bi2de(encodedDataMatrix, 'left-msb');
         %in a rayleigh channel it is necessary to interleave bits before modulation
 
-        modSignalBlock = step(qamMod, symbolsBlock);
+        modSignal = step(qamMod, symbols);
         
-        channelSignalRaylBlock = modSignalBlock .* hBlock;
-        channelSignalBlock = step(hChanAWGN, channelSignalRaylBlock);
+        channelSignalRayl = modSignal .* h;
+        channelSignal = step(hChanAWGN, channelSignalRayl);
 
         %in a rayleigh channel it is necessary to de-interleave demodulated bits before
 
         %decoding
-        eqSignalBlock = channelSignalBlock ./ hBlock;
-        receivedSignalBlock = step(qamdemod, eqSignalBlock);
+        eqSignal = channelSignal ./ h;
+        receivedSignal = step(qamdemod, eqSignal);
         
         % Convert received signal to log-likelihood ratios for decoding
-        deinterSignalBlock = deintrlv(receivedSignalBlock, intrlvrIndices_block);
-        [receivedBitsBlock, err]  = decode(deinterSignalBlock,wordSize,blockSize,'hamming/binary');
-        
-        dataMatrixdec = reshape(receivedBitsBlock, blockSize, []).';
-        aux = any(dataMatrix ~= dataMatrixdec, 2);
-        
-        %aux = sum(err == -1);
-        NErr(nEN,1)=NErr(nEN,1)+sum(aux);
-        errorStatsBlock = step(hError, dataPadded, receivedBitsBlock);
+        %deinterSignal = deintrlv(receivedSignal, intrlvrIndices);
+        decodedBits = step(hconvde, encodedData);
+        receivedBits  = decodedBits(1:length(data));
+
+        errorStats = step(hError, data, receivedBits);
 
 
     end
-    NErr1Block(nEN,1)=errorStatsBlock(1);
-    NErr2Block(nEN,1)=errorStatsBlock(2);
-    NErr3Block(nEN,1)=errorStatsBlock(3);
+    NErr1(nEN,1)=errorStats(1);
+    NErr2(nEN,1)=errorStats(2);
+    NErr3(nEN,1)=errorStats(3);
 end
 
-Ptx = NErr/24/10000
-BERBlock=NErr1Block;
-NerrosBlock=NErr2Block;
-bitsTotalBlock=NErr3Block;
+BER=NErr1;
+Nerros=NErr2;
+bitsTotal=NErr3;
 
-P0Block = (1 - BERBlock).^blockSize;
-P1Block = blockSize .* BERBlock .* (1 - BERBlock).^(blockSize - 1);
-
-PretransBlock = 1 - (P0Block + P1Block);  % vetor da probabilidade de retransmissão
-
-fprintf('\n\n\n ######## Block Codes ######### \n\n\n')
+fprintf('\n\n\n ######## Conv Codes ######### \n\n\n')
 for nEN=1:NEN
     
     fprintf('\n\n----- SNR %d ----\n\n', EN(nEN))
     fprintf('Error rate = %f\nNumber of errors = %d\nTotal bits = %d\n', ...
-    BERBlock(nEN), NerrosBlock(nEN), bitsTotalBlock(nEN)) 
+    BER(nEN), Nerros(nEN), bitsTotal(nEN)) 
     
 end
 
-
 figure()
-semilogy(EN,BERBlock,'k-*', EN,PretransBlock,'b-*')
+semilogy(EN,BER,'k-*')
 xlabel('E_b/N_0(dB)'),ylabel('BER')
 axis([-5 20 1e-7 1])
+
+% % -------------- Blocks -------------
+% 
+% for nEN=1:NEN
+%     hChanAWGN  = comm.AWGNChannel('NoiseMethod', 'Variance', 'Variance', noiseVar(nEN));
+%     %hChanRAYL  = comm.RayleighChannel('PathDelays',0, 'AveragePathGains',0,'NormalizePathGains',1, 'MaximumDopplerShift',0);
+%     % Canal Rayleigh plano (flat-fading) gerado manualmente
+%     hBlock = (randn(90, 1) + 1j * randn(90, 1)) / sqrt(2);
+%     
+%     reset(hError);
+%     reset(hconvde);
+%     for frmIdx = 1:10000
+%         dataBlock = randi(s, [0 1], frmLen, 1);
+%         dataPadded = [dataBlock; zeros(n_excess,1)];
+%         dataMatrix = reshape(dataPadded, blockSize, []).';
+%         codedMatrix = zeros(nBlocks, wordSize);
+%         for i = 1:nBlocks
+%             codedMatrix(i, :) = encode(dataMatrix(i, :)', wordSize, blockSize, 'hamming/binary')';
+%         end
+% 
+%         % Vetor codificado completo
+%         encodedDataBlock = reshape(codedMatrix.', [], 1);
+%         
+%         dataMatrixCode = reshape(encodedDataBlock, wordSize, []).';
+%         
+%         interDataBlock = intrlv(encodedDataBlock, intrlvrIndices_block);
+%         encodedDataMatrixBlock = reshape(interDataBlock, 4, []).';        % Cada linha: 4 bits
+%         symbolsBlock = bi2de(encodedDataMatrixBlock, 'left-msb');
+%         %in a rayleigh channel it is necessary to interleave bits before modulation
+% 
+%         modSignalBlock = step(qamMod, symbolsBlock);
+%         
+%         channelSignalRaylBlock = modSignalBlock .* hBlock;
+%         channelSignalBlock = step(hChanAWGN, channelSignalRaylBlock);
+% 
+%         %in a rayleigh channel it is necessary to de-interleave demodulated bits before
+% 
+%         %decoding
+%         eqSignalBlock = channelSignalBlock ./ hBlock;
+%         receivedSignalBlock = step(qamdemod, eqSignalBlock);
+%         
+%         % Convert received signal to log-likelihood ratios for decoding
+%         deinterSignalBlock = deintrlv(receivedSignalBlock, intrlvrIndices_block);
+%         [receivedBitsBlock, err]  = decode(deinterSignalBlock,wordSize,blockSize,'hamming/binary');
+%         
+%         dataMatrixdec = reshape(deinterSignalBlock, wordSize, []).';
+%         errCounts = sum(dataMatrixCode ~= dataMatrixdec, 2);
+%         
+%         aux = (errCounts == 2) | (errCounts == 3);
+%         
+%         %aux = sum(err == -1);
+%         NErr(nEN,1)=NErr(nEN,1)+sum(aux);
+%         errorStatsBlock = step(hError, dataPadded, receivedBitsBlock);
+%         
+% 
+% 
+%     end
+%     NErr1Block(nEN,1)=errorStatsBlock(1);
+%     NErr2Block(nEN,1)=errorStatsBlock(2);
+%     NErr3Block(nEN,1)=errorStatsBlock(3);
+% end
+% 
+% Ptx = NErr/24/10000
+% BERBlock=NErr1Block;
+% NerrosBlock=NErr2Block;
+% bitsTotalBlock=NErr3Block;
+% 
+% P0Block = (1 - BERBlock).^blockSize;
+% P1Block = blockSize .* BERBlock .* (1 - BERBlock).^(blockSize - 1);
+% 
+% PretransBlock = 1 - (P0Block + P1Block);  % vetor da probabilidade de retransmissão
+% 
+% fprintf('\n\n\n ######## Block Codes ######### \n\n\n')
+% for nEN=1:NEN
+%     
+%     fprintf('\n\n----- SNR %d ----\n\n', EN(nEN))
+%     fprintf('Error rate = %f\nNumber of errors = %d\nTotal bits = %d\n', ...
+%     BERBlock(nEN), NerrosBlock(nEN), bitsTotalBlock(nEN)) 
+%     
+% end
+% 
+% 
+% figure()
+% semilogy(EN,BERBlock,'k-*', EN,PretransBlock,'b-*')
+% xlabel('E_b/N_0(dB)'),ylabel('BER')
+% axis([-5 20 1e-7 1])
 
 
 % % -------------- Blocks and Conv -------------
