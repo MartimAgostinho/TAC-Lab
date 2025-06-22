@@ -149,7 +149,7 @@ Gray mapping was chosen because it minimises the bit‑error probability in an A
 The theoretical bit-error probability for 16-QAM in an AWGN channel can be approximated by Equation \ref{eq:probErr16QAM}.
 
 \begin{equation}
-  P_b^{\text{16QAM}} \approx 3\cdot Q\left(\sqrt{\frac{4}{5}\frac{E_b}{N_0}}\right)\text{\cite{Work_TAC2025}}
+  P_b^{\text{16QAM}} \approx \frac{3}{4}\cdot Q\left(\sqrt{\frac{4}{5}\frac{E_b}{N_0}}\right)\text{\cite{Work_TAC2025}}
   \label{eq:probErr16QAM}
 \end{equation}
 
@@ -190,7 +190,7 @@ In order to get the BER as a function of SNR, two bit streams were created with 
 
 In each case the resulting bit stream was transmitted over four combinations, the two channels, AWGN and Rayleigh, with the two modulations discussed in section \ref{ssec:modulations}, QPSK and 16QAM.
 
-Although previously the goal was set to send 1 million bits, but with this number of bits, for some combinations there were no BER points, meaning never a error occurred, hence the number of bits was set to $10^{9}$, this is overkill but made more accurate graphs. 
+Although previously the goal was set to send 1 million bits, but with this number of bits, for some combinations there were no BER points, meaning never a error occurred, hence the number of bits was set to $10^{8}$, this is overkill but made more accurate graphs. 
 
 
 \begin{figure}[H]

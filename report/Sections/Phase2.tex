@@ -36,6 +36,17 @@ Dar plot aos valores teoricos e mostrar as equacoes.
 
 The other block-coding stage employed is the binary Hamming $(15,11)$ code. It maps every $k=11$ information bits into an $n=15-bit$ codeword, adding four parity bits according to the generator matrix, The code can correct any single-bit error and detect (but not correct) any double-bit error in each 15-bit word.
 
+% QPSK 
+\begin{equation}
+P_b^{\text{QPSK, Rayleigh}} = \frac{1}{2} \left( 1 - \sqrt{ \frac{E_b / N_0}{1 + E_b / N_0} } \right )
+\end{equation}
+
+% 16QAM 
+\begin{equation}
+      P_b^{\text{16QAM, Rayleigh}} = \frac{3}{4} \left( 1 - \sqrt{ \frac{ \frac{4}{5} \, E_b / N_0 }{ 1 + \frac{4}{5} \, E_b / N_0 } } \right )
+\end{equation}
+
+
 \begin{comment}
 
         \begin{itemize}

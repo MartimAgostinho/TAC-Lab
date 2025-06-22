@@ -29,11 +29,11 @@ function [BER_arr,SNR_arr] = channel(BitStream,CHANNEL,modulation,ErrorDetection
 
 
     if strcmp(modulation,'QPSK') ~= 0
-        sigma =sqrt(2.5 ./en); 
+        sigma =sqrt(2 ./en); 
         N = Stream_len / 2 
 
     elseif strcmp(modulation,'16QAM') ~= 0
-        Es = 10;
+        Es = 4;
         sigma=sqrt(Es ./(en.*5))*3; 
         N = Stream_len / 4
     else
