@@ -33,8 +33,6 @@ NEN = numel(EN);
 en = 10 .^(EN/10);
 noiseVar = 1 ./ (1/3 * 4 .* en);
 
-NSlot = 10000;
-
 message = 'polar codes are employed in 5g due better performance and simplicity';
 
 [datahuff, dict, messagepadd] = huffman_encode(message);
@@ -42,6 +40,8 @@ message = 'polar codes are employed in 5g due better performance and simplicity'
 data = datahuff';
 
 frmLen = length(data);
+
+NSlot = ceil(1e8 / frmLen)
 
 s = RandStream('mt19937ar', 'Seed', 11);
 
@@ -144,7 +144,7 @@ for c = 1:4
     semilogy( EN , BERblock(:,c) , style{c} , 'LineWidth',1.4 );
 end
 for c = 1:4
-    semilogy( EN , PretxBlock(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
+    semilogy( EN , PtxBlock(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
 end
 set(gca, 'YScale', 'log');
 xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
@@ -160,7 +160,7 @@ for c = 1:4
     semilogy( EN , BERblockConv(:,c) , style{c} , 'LineWidth',1.4 );
 end
 for c = 1:4
-    semilogy( EN , PretxBlockConv(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
+    semilogy( EN , PtxBlockConv(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
 end
 set(gca, 'YScale', 'log');
 xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
