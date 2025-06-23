@@ -3,21 +3,21 @@ clear, clc
 EbN0dB = -5:0.5:22;
 EbN0   = 10.^(EbN0dB/10);
 
-<<<<<<< Updated upstream
+
 
 % ----- BER bruto sem FEC ----------------------------------
 berRaw.QPSK_AWGN  = q_x(sqrt(2*EbN0));
 berRaw.QPSK_Ray   = 0.5 * (1 - sqrt(EbN0 ./ (1+EbN0)));
 
-berRaw.QAM16_AWGN = 0.75 * Qf( sqrt((4/5)*EbN0) );
-=======
+berRaw.QAM16_AWGN = 0.75 * q_x( sqrt((4/5)*EbN0) );
+
 
 
 % ----- BER bruto sem FEC ----------------------------------
 berRaw.QPSK_AWGN  = q_x( sqrt(2*EbN0) );
 berRaw.QPSK_Ray   = 0.5 * (1 - sqrt(EbN0 ./ (1+EbN0)));
 berRaw.QAM16_AWGN = 0.75 * q_x( sqrt(4/5*EbN0) );
->>>>>>> Stashed changes
+
 berRaw.QAM16_Ray  = 0.75 * (1 - sqrt((4/5)*EbN0 ./ (1+4/5*EbN0)));
 
 Pretx  = struct();
@@ -41,4 +41,4 @@ xlabel('E_b/N_0  (dB)')
 ylabel('P_{ret}')
 title('P_{ret}  (Hamming 15,11)')
 legend(legendas, 'Location','southwest')
-axis([-5 13 1e-5 1])
+axis([-5 22 1e-5 1])
