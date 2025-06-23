@@ -22,22 +22,19 @@ function [BER_arr,SNR_arr] = channel(BitStream,CHANNEL,modulation,ErrorDetection
   
     L=1; % L-th order diversity
     Ts=4e-6; % Block duration
+    %Tg=0.2*Ts; % Cyclic prefix durration
+    %f=[-N/2:N/2-1]'/Ts; % frequencies
     Eb = 1;
-
+    %T_symbol = Ts + Tg;     % duração total OFDM
 
 
     if strcmp(modulation,'QPSK') ~= 0
-        sigma =sqrt(2 ./en); 
+        sigma =sqrt(2.5 ./en); 
         N = Stream_len / 2 
 
     elseif strcmp(modulation,'16QAM') ~= 0
-<<<<<<< Updated upstream
-        Es = 4;
-        sigma=sqrt(Es ./(en.*5))*3; 
-=======
-        Es = 10;   
-        sigma=sqrt(Es ./(en.*5))*3/4; 
->>>>>>> Stashed changes
+        Es = 10;
+        sigma=sqrt(Eb ./(en.*5))*3/4; 
         N = Stream_len / 4
     else
         fprintf('ERRO: Wrong Modulation Value')
@@ -45,7 +42,7 @@ function [BER_arr,SNR_arr] = channel(BitStream,CHANNEL,modulation,ErrorDetection
     end
     Symb_Stream = modul8(BitStream, modulation).';
 
-
+    %meter 16qam, ofdm, passar pelo canal e sacar tudo de fora
     NSlot = n_it;
     message_all = zeros(NEN,length(BitStream));
     for nn=1:NSlot
@@ -61,12 +58,11 @@ function [BER_arr,SNR_arr] = channel(BitStream,CHANNEL,modulation,ErrorDetection
         An_Tx = Symb_Stream;
         Ak_Tx=fftshift(fft(fftshift(An_Tx)));
         %an_Tx=fftshift(ifft(fftshift(Ak_Tx)));
-
         for nEN=1:NEN
             Yk=zeros(N,L);
             for l=1:L
                 
-                Yk(:,l)=Ak_Tx.*Hk(:,l)+(randn(N,1)+j*randn(N,1))*sigma(nEN) * sqrt(N);
+                Yk(:,l)=Ak_Tx.*Hk(:,l)+(randn(N,1)+j*randn(N,1))*sigma(nEN);
             end;
             YIk=0;
             for l=1:L
