@@ -41,7 +41,7 @@ data = datahuff';
 
 frmLen = length(data);
 
-NSlot = ceil(1e8 / frmLen)
+NSlot = ceil(1e6 / frmLen)
 
 s = RandStream('mt19937ar', 'Seed', 11);
 
@@ -143,28 +143,46 @@ figure(2); clf; grid on; hold on;
 for c = 1:4
     semilogy( EN , BERblock(:,c) , style{c} , 'LineWidth',1.4 );
 end
-for c = 1:4
-    semilogy( EN , PtxBlock(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
-end
 set(gca, 'YScale', 'log');
 xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
-title('BER and re-tx probability – Hamming block');
+title('BER – Hamming block');
 legend([labels , strcat({'P_{re-}'},labels)],'Location','southwest');
 axis([-5 22 1e-7 1]);
 
 % ---------------------------------------------------------------
-%  FIGURE 3 : Block + Convolutional
+%  FIGURE 2 : Hamming block code
 % ---------------------------------------------------------------
 figure(3); clf; grid on; hold on;
 for c = 1:4
-    semilogy( EN , BERblockConv(:,c) , style{c} , 'LineWidth',1.4 );
-end
-for c = 1:4
-    semilogy( EN , PtxBlockConv(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
+    semilogy( EN , PtxBlock(:,c) , style{c} , 'LineWidth',1.0);
 end
 set(gca, 'YScale', 'log');
 xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
-title('BER and re-tx probability – block + convolutional');
+title('Retransmission probability – Hamming block');
+legend([labels , strcat({'P_{re-}'},labels)],'Location','southwest');
+axis([-5 22 1e-7 1]);
+
+
+% ---------------------------------------------------------------
+%  FIGURE 3 : Block + Convolutional
+% ---------------------------------------------------------------
+figure(4); clf; grid on; hold on;
+for c = 1:4
+    semilogy( EN , BERblockConv(:,c) , style{c} , 'LineWidth',1.4 );
+end
+set(gca, 'YScale', 'log');
+xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
+title('BER – block + convolutional');
+legend([labels , strcat({'P_{re-}'},labels)],'Location','southwest');
+axis([-5 22 1e-7 1]);
+
+figure(5); clf; grid on; hold on;
+for c = 1:4
+    semilogy( EN , PtxBlockConv(:,c) , style{c} , 'LineWidth',1.0);
+end
+set(gca, 'YScale', 'log');
+xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
+title('Retransmission probability – block + convolutional');
 legend([labels , strcat({'P_{re-}'},labels)],'Location','southwest');
 axis([-5 22 1e-7 1]);
 

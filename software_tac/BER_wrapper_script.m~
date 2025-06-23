@@ -33,8 +33,6 @@ NEN = numel(EN);
 en = 10 .^(EN/10);
 noiseVar = 1 ./ (1/3 * 4 .* en);
 
-NSlot = 100;
-
 message = 'polar codes are employed in 5g due better performance and simplicity';
 
 [datahuff, dict, messagepadd] = huffman_encode(message);
@@ -42,6 +40,8 @@ message = 'polar codes are employed in 5g due better performance and simplicity'
 data = datahuff';
 
 frmLen = length(data);
+
+NSlot = ceil(1e7 / frmLen)
 
 s = RandStream('mt19937ar', 'Seed', 11);
 
@@ -143,9 +143,6 @@ figure(2); clf; grid on; hold on;
 for c = 1:4
     semilogy( EN , BERblock(:,c) , style{c} , 'LineWidth',1.4 );
 end
-for c = 1:4
-    semilogy( EN , PretxBlock(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
-end
 set(gca, 'YScale', 'log');
 xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
 title('BER and re-tx probability – Hamming block');
@@ -153,14 +150,35 @@ legend([labels , strcat({'P_{re-}'},labels)],'Location','southwest');
 axis([-5 22 1e-7 1]);
 
 % ---------------------------------------------------------------
-%  FIGURE 3 : Block + Convolutional
+%  FIGURE 2 : Hamming block code
 % ---------------------------------------------------------------
 figure(3); clf; grid on; hold on;
 for c = 1:4
+    semilogy( EN , PtxBlock(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
+end
+set(gca, 'YScale', 'log');
+xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
+title('Retransmission probability – Hamming block');
+legend([labels , strcat({'P_{re-}'},labels)],'Location','southwest');
+axis([-5 22 1e-7 1]);
+
+
+% ---------------------------------------------------------------
+%  FIGURE 3 : Block + Convolutional
+% ---------------------------------------------------------------
+figure(4); clf; grid on; hold on;
+for c = 1:4
     semilogy( EN , BERblockConv(:,c) , style{c} , 'LineWidth',1.4 );
 end
+set(gca, 'YScale', 'log');
+xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
+title('BER and re-tx probability – block + convolutional');
+legend([labels , strcat({'P_{re-}'},labels)],'Location','southwest');
+axis([-5 22 1e-7 1]);
+
+figure(5); clf; grid on; hold on;
 for c = 1:4
-    semilogy( EN , PretxBlockConv(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
+    semilogy( EN , PtxBlockConv(:,c) , [style{c}(1) '--'] , 'LineWidth',1.0);
 end
 set(gca, 'YScale', 'log');
 xlabel('E_b/N_0  (dB)'); ylabel('BER / P_{re-tx}');
@@ -287,7 +305,7 @@ function [BERBlock,PretxBlock, PtxBlock] = runBlock(CHANNEL,modulation,noiseVar)
         if(strcmp(modulation, '16QAM') == 1)
             hBlock = (randn(ceil((nBlocks*15 +3)/4), 1) + 1j * randn(ceil((nBlocks*15 +3)/4), 1)) / sqrt(2);
         elseif(strcmp(modulation, 'QPSK') == 1)
-            hBlock = (randn(ceil((nBlocks*15 +3)/2), 1) + 1j * randn(ceil((nBlocks*15 +3)/2) +1, 1)) / sqrt(2);
+            hBlock = (randn(ceil((nBlocks*15 +3)/2), 1) + 1j * randn(ceil((nBlocks*15 +3)/2), 1)) / sqrt(2);
         end
         reset(hError);
         reset(hconvde);
@@ -397,9 +415,9 @@ function [BERBlockConv,PretxBlockConv, PtxBlockConv] = runBlockConv(CHANNEL,modu
     for nEN=1:NEN
         hChanAWGN  = comm.AWGNChannel('NoiseMethod', 'Variance', 'Variance', noiseVar(nEN));
         if(strcmp(modulation, '16QAM') == 1)
-            hBlockConv = (randn(ceil((nBlocks*15+6 +3)*3/4), 1) + 1j * randn(ceil((nBlocks*15+6)*3/4), 1)) / sqrt(2);
+            hBlockConv = (randn(ceil((nBlocks*15+6 +3)*3/4), 1) + 1j * randn(ceil((nBlocks*15+6 +3)*3/4), 1)) / sqrt(2);
         elseif(strcmp(modulation, 'QPSK') == 1)
-            hBlockConv = (randn(ceil((nBlocks*15+6 +3)*3/2), 1) + 1j * randn(ceil((nBlocks*15+6)*3/2), 1)) / sqrt(2);
+            hBlockConv = (randn(ceil((nBlocks*15+6 +3)*3/2), 1) + 1j * randn(ceil((nBlocks*15+6 +3)*3/2), 1)) / sqrt(2);
         end
         reset(hError);
         reset(hconvde);
@@ -440,8 +458,6 @@ function [BERBlockConv,PretxBlockConv, PtxBlockConv] = runBlockConv(CHANNEL,modu
                 channelSignalBlockConv = step(hChanAWGN, modSignalBlockConv);
                 eqSignalBlockConv = channelSignalBlockConv;
             elseif(strcmp(CHANNEL, 'RAYL') == 1)
-                length(hBlockConv)
-                length(modSignalBlockConv)
                 channelSignalRaylBlockConv = modSignalBlockConv .* hBlockConv;
                 channelSignalBlockConv = step(hChanAWGN, channelSignalRaylBlockConv);
                 eqSignalBlockConv = channelSignalBlockConv ./ hBlockConv;
