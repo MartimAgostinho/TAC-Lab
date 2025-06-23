@@ -1,20 +1,6 @@
 \section{Phase II}
 \label{sec:phase2}
 
-
-
-
-\subsection{Resultados}
-
-3 Figuras com 4 curvas, conv bloco e seguido, curvas comb canais e modulacoes.
-
-Valor teorico das probabilidades de retransmissao e de erro plot
-
-tabela ErrorRate | Numero de Erros | 
-
-
-
-
 Figure~\ref{fig:RxTx} shows the complete Block Diagram. For this second phase 2 blocks are added, Interleaver and error control. 
 
 \subsection{Interleaver}
@@ -29,90 +15,10 @@ For both error-control schemes the MATLAB processing chain is identical: the pla
 
 The convolutional coding uses 64 states and has a code rate $R = 1/3$, constraint length $K = 7$ and generator polinomial $G_0 = 133$, $G_1=171$ and $G_3 = 165$. 
 
-
-Dar plot aos valores teoricos e mostrar as equacoes.
-
 \subsubsection{Hamming}
 
 The other block-coding stage employed is the binary Hamming $(15,11)$ code. It maps every $k=11$ information bits into an $n=15-bit$ codeword, adding four parity bits according to the generator matrix, The code can correct any single-bit error and detect (but not correct) any double-bit error in each 15-bit word.
 
-% QPSK 
-\begin{equation}
-P_b^{\text{QPSK, Rayleigh}} = \frac{1}{2} \left( 1 - \sqrt{ \frac{E_b / N_0}{1 + E_b / N_0} } \right )
-\end{equation}
-
-% 16QAM 
-\begin{equation}
-      P_b^{\text{16QAM, Rayleigh}} = \frac{3}{4} \left( 1 - \sqrt{ \frac{ \frac{4}{5} \, E_b / N_0 }{ 1 + \frac{4}{5} \, E_b / N_0 } } \right )
-\end{equation}
-
-
-\begin{comment}
-
-        \begin{itemize}
-          \item \textit{Convolutional} encoder, rate~$1/3$, constraint
-                length $K=7$; generator polynomials in octal  
-                $G_0 = 133,\; G_1 = 171,\; G_2 = 165$  
-                (see Table 9-2 in \textit{TAC Topics}).  The
-                Viterbi algorithm is used for decoding.
-          \item \textit{Hamming} $(15,\,11)$ block code; generator
-                matrix  
-                \(
-                  \mathbf G =
-                    \bigl[I_{11}\;|\;\mathbf P_{11\times4}\bigr]
-                \)
-                (full matrix in App.~\ref{app:hamming}).
-          \item \textit{Concatenated} scheme: Hamming outer +
-                convolutional inner, interleaved in between
-                to randomise burst errors (Carlson et al., §13.4).
-        \end{itemize}
-  \item \textbf{Interleaver / De-interleaver}  
-        Block-random interleavers sized to the coded payload
-        (indices generated once with a fixed RNG seed).
-  \item \textbf{Mapper / Modulator}  
-        QPSK and 16-QAM with Gray labelling
-        (TAC Topics, §7.7).  Symbols are loaded into an $N\!=\!256$
-        sub-carrier OFDM IFFT; a 25 %-cyclic prefix is appended.
-  \item \textbf{Channel Model}  
-        \begin{itemize}
-          \item \textit{AWGN}: additive white Gaussian noise only.  
-          \item \textit{Rayleigh flat-fading}: single tap
-                $h\!\sim\!\mathcal N_\mathbb C(0,1)$
-                plus AWGN (Carlson et al., Fig. 9-8).
-        \end{itemize}
-        Noise power is set from the desired
-        $E_b/N_0$ via
-        $N_0 = 1 /\bigl(R_c\log_2M\bigr)$,
-        where $R_c$ is the overall code rate.
-  \item \textbf{Demodulator \& Decoders}  
-        Hard-decision QAM/QPSK demapper, followed by de-interleaving
-        and the corresponding FEC decoder(s).
-  \item \textbf{Error Counter}  
-        Bit errors and frame (re-Tx) errors are counted to produce
-        the empirical BER and retransmission probability
-        $P_{\text{re}}$.
-\end{enumerate}
-
-\begin{figure}[h]
-\centering
-\begin{tikzpicture}[node distance=6mm,>=latex,font=\small]
-  \node[draw,rectangle] (src) {ASCII / Huffman};
-  \node[draw,rectangle,right=of src] (fec)  {FEC \\ (Conv, Ham, Both)};
-  \node[draw,rectangle,right=of fec] (int)  {Interleaver};
-  \node[draw,rectangle,right=of int] (map)  {QPSK / 16-QAM \\ + OFDM};
-  \node[draw,rectangle,right=of map] (chan) {AWGN / Rayleigh};
-  \node[draw,rectangle,right=of chan] (dmap){Demap \\+ FFT};
-  \node[draw,rectangle,right=of dmap] (dint){De-interleaver};
-  \node[draw,rectangle,right=of dint] (dfec){FEC Decoder};
-  \node[draw,rectangle,right=of dfec] (sink){ASCII / Huffman Decode};
-  \draw[->] (src)--(fec)--(int)--(map)--(chan)--(dmap)--(dint)--(dfec)--(sink);
-\end{tikzpicture}
-\caption{End-to-end block diagram used in Phase II.}
-\label{fig:sys_block_diag}
-\end{figure}
-
-\end{comment}
-%--------------------------------------------------------------------
 \subsubsection{Theoretical re-transmission probability}
 
 For a $(15,11)$ Hamming code an ARQ is triggered if the decoder
@@ -123,78 +29,82 @@ detects \(\ge 2\) bit errors in the codeword. The probability is Equation \ref{e
       \label{eq:Pret}
 \end{equation}
 
+Where the it error probabilities are: 
+
+\begin{equation}
+      P_b^{\text{QPSK, Rayleigh}} = \frac{1}{2} \left( 1 - \sqrt{ \frac{E_b / N_0}{1 + E_b / N_0} } \right )
+\end{equation}
+
+\begin{equation}
+      P_b^{\text{16QAM, Rayleigh}} = \frac{3}{4} \left( 1 - \sqrt{ \frac{ \frac{4}{5} \, E_b / N_0 }{ 1 + \frac{4}{5} \, E_b / N_0 } } \right )
+\end{equation}
+
+
 This yields Figure \ref{fig:Pret_Teo}.
 
-%--------------------------------------------------------------------
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{Images/Pret_hamm.png}
+  \caption{Theoretical retransmission probability.}
+  \label{fig:Pret_Teo}
+\end{figure}
+
 \subsection{Simulation results}
 
-Figures \ref{fig:conv_fig}–\ref{fig:concat_fig} show the measured BER
-for all four channel/modulation pairs.  In the block-code and
-concatenated plots the dashed lines add the \emph{simulated} re-Tx
-probability, which matches the theoretical curve above for
-high SNR.
+It is important to note that as previously stated, for Huffman or ASCII encoding, the results should not change for the BER performance, hence only the Huffman encoded Bit stream was used. In order to maintain comparable graphs, all graphs are BER as a function of SNR. For this section since simulations took considerably longer, the number of bits sent returned again to 1 million.
 
-\begin{comment}
+First simulating only with the convolutional coding, Figure \ref{fig:Conv_BER}. This shows that BER quickly drops.
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\linewidth]{%%%conv_fig.pdf}
-  \caption{BER for convolutional coding only.}
-  \label{fig:conv_fig}
+  \includegraphics[width=0.7\linewidth]{Images/ConvCode.png}
+  \caption{Convolutional  coding BER vs.\ $E_b/N_0$.}
+  \label{fig:Conv_BER}
 \end{figure}
 
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=0.8\linewidth]{%%%ham_fig.pdf}
-  \caption{BER (\textcolor{black}{solid}) and $P_{\text{re}}$
-           (\textcolor{blue}{dashed}) for Hamming
-           $(15,11)$ block coding.  The dotted curve is the theoretical
-           $P_{\text{re,\,theo}}(P_b)$.}
-  \label{fig:ham_fig}
+After this the Hamming(15,11) was simulated, Figure \ref{fig:Hamm_BER}. This shows that BER does not drop as quickly.
+
+The simulated retransmission probability was also calculated, Figure \ref{fig:Pret_sim}.
+
+\begin{figure}[H]
+
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics*[scale = 0.18]{Images/BlockCode.png}
+        \caption{BER vs.\ $E_b/N_0$.}
+        \label{fig:Hamm_BER}
+    \end{subfigure}
+    %\hfill
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics*[scale = 0.19]{Images/BlockCode.png}
+        \caption{Retransmission Probability.}
+        \label{fig:Pret_Sim}
+    \end{subfigure}
+    
+    \caption{Hamming(15,11), performance metrics.}
+    \label{fig:Hamm_performance}
 \end{figure}
 
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=0.8\linewidth]{%%%concat_fig.pdf}
-  \caption{BER (\textcolor{black}{solid}) and $P_{\text{re}}$
-           (\textcolor{blue}{dashed}) for concatenated
-           Hamming + convolutional coding.}
-  \label{fig:concat_fig}
+
+Finally with both methods, Figure \ref{fig:Both_BER}, showing the best performance over all.
+
+\begin{figure}[H]
+
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics*[scale = 0.18]{Images/BlockConvCode.png}
+        \caption{BER vs.\ $E_b/N_0$.}
+        \label{fig:Both_BER}
+    \end{subfigure}
+    %\hfill
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics*[scale = 0.19]{Images/BlockConvCode.png}
+        \caption{Retransmission Probability.}
+        \label{fig:Pret_Both_Sim}
+    \end{subfigure}
+    
+    \caption{Hamming(15,11) + Convolutional, performance metrics.}
+    \label{fig:Both_performance}
 \end{figure}
 
-\end{comment}
-%--------------------------------------------------------------------
-\subsection{Discussion}
-
-\begin{comment}
-
-\begin{itemize}
-  \item \textbf{Modulation vs.\ Channel.}
-        Consistently with \cite{Work_TAC2025}, QPSK outperforms
-        16-QAM by $\approx$4–6 dB in both channels; Rayleigh fading
-        raises the BER floor unless diversity or coding gain compensates
-        for deep fades (Carlson et al., Fig.\,10-14).
-  \item \textbf{Coding gain.}
-        The convolutional code shifts the BER curve about
-        $%%%<\!G_c\!\text{ dB}>$ to the left (at BER $=10^{-5}$)
-        relative to uncoded transmission.  The block code alone yields
-        $%%%<\!G_b\!\text{ dB}>$; the concatenated scheme combines both
-        gains and meets the lab target of BER $<10^{-5}$ at
-        $E_b/N_0 = 9$ dB in AWGN.
-  \item \textbf{Retransmissions.}
-        The simulated $P_{\text{re}}$ coincides with the theoretical
-        curve at high SNR, confirming correct error-detection logic.
-        In Rayleigh, $P_{\text{re}}$ flattens above $10^{-4}$ because
-        burst errors from deep fades violate the “max 1 error/word”
-        assumption; interleaving mitigates but does not eliminate this
-        effect.
-  \item \textbf{Source coding impact.}
-        Huffman reduces the transmitted bit rate from 8 b/char to
-        $\approx4.09$ b/char, effectively doubling throughput at the
-        same spectral occupancy.  The BER curves are \emph{unchanged}
-        because the channel sees random bits either way, but under
-        errors Huffman can corrupt more than one character—a trade-off
-        discussed in Sec.\,\ref{sec:throughput}.
-\end{itemize}
-\end{comment}
-
+When comparing to Figure \ref{fig:BER_SNR}, where there is no error correction nor detection there is a clear improvement for all cases, alone convolutional coding shows the best improvement, but by combining both methods the system is able to low BER in a noisy channel.
