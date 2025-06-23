@@ -57,26 +57,26 @@ First simulating only with the convolutional coding, Figure \ref{fig:Conv_BER}. 
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.7\linewidth]{Images/ConvCode.png}
+  \includegraphics[width=0.7\linewidth]{Images/ConvCodeBER.png}
   \caption{Convolutional  coding BER vs.\ $E_b/N_0$.}
   \label{fig:Conv_BER}
 \end{figure}
 
-After this the Hamming(15,11) was simulated, Figure \ref{fig:Hamm_BER}. This shows that BER does not drop as quickly.
+After this the Hamming(15,11) was simulated, Figure \ref{fig:Hamm_BER}. This shows that BER does not drop as quickly. 
 
-The simulated retransmission probability was also calculated, Figure \ref{fig:Pret_Sim}, this approximates the theoretical values except for high retransmission values, Figure \ref{fig:Pret_Teo}, this is expected, since the Equation \ref{eq:Pret} assumptions do not hold for high values of $p$.
+In order to calculate the retransmission probability, Figure \ref{fig:Pret_Sim}, the retransmissions were counted, since the MATLAB function used did not provide when errors were detected but exceeded correction capacity, an estimation was made, a retransmission was counted when after demodulation there were $m \in \{2,3\}$ bits wrong. This approximates the theoretical values except for high retransmission values, Figure \ref{fig:Pret_Teo}, this is expected, since the Equation \ref{eq:Pret} assumptions do not hold for high values of $p$. Another reason that makes both graphs differ comes from the estimation done to calculate a retransmission in the simulation.
 
 \begin{figure}[H]
 
     \centering
     \begin{subfigure}{0.45\textwidth}
-        \includegraphics*[scale = 0.18]{Images/BlockCode.png}
+        \includegraphics*[scale = 0.18]{Images/BlockCodeBER.png}
         \caption{BER vs.\ $E_b/N_0$.}
         \label{fig:Hamm_BER}
     \end{subfigure}
     %\hfill
     \begin{subfigure}{0.45\textwidth}
-        \includegraphics*[scale = 0.19]{Images/BlockCode.png}
+        \includegraphics*[scale = 0.19]{Images/BlockCodeRTX.png}
         \caption{Retransmission Probability.}
         \label{fig:Pret_Sim}
     \end{subfigure}
@@ -92,13 +92,13 @@ Finally with both methods, Figure \ref{fig:Both_BER}, showing the best performan
 
     \centering
     \begin{subfigure}{0.45\textwidth}
-        \includegraphics*[scale = 0.18]{Images/BlockConvCode.png}
+        \includegraphics*[scale = 0.18]{Images/BlockConvCodeBER.png}
         \caption{BER vs.\ $E_b/N_0$.}
         \label{fig:Both_BER}
     \end{subfigure}
     %\hfill
     \begin{subfigure}{0.45\textwidth}
-        \includegraphics*[scale = 0.19]{Images/BlockConvCode.png}
+        \includegraphics*[scale = 0.19]{Images/BlockConvCodeRTX.png}
         \caption{Retransmission Probability.}
         \label{fig:Pret_Both_Sim}
     \end{subfigure}
